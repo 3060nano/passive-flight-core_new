@@ -1,4 +1,5 @@
 #include "passive_flight/TabulatedAerodynamicModel.hpp"
+#include "passive_flight/CubicSpline.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -80,49 +81,19 @@ double interpolate(
         );
     }
 
-    const auto upper = std::lower_bound(
-        table.begin(),
-        table.end(),
-        mach,
-        [](
-            const MachCoefficientPoint& point,
-            double value
-        ) {
-            return point.mach < value;
-        }
-    );
+    std::vector<double> xs;
+    std::vector<double> ys;
+    xs.reserve(table.size());
+    ys.reserve(table.size());
 
-    if (upper == table.begin()) {
-        return upper->value;
+    for (const auto& point : table) {
+        xs.push_back(point.mach);
+        ys.push_back(point.value);
     }
 
-    if (upper == table.end()) {
-        return table.back().value;
-    }
-
-    if (std::abs(upper->mach - mach) <=
-        1.0e-12) {
-        return upper->value;
-    }
-
-    const auto lower =
-        upper - 1;
-
-    const double interval =
-        upper->mach -
-        lower->mach;
-
-    const double fraction =
-        (mach - lower->mach) /
-        interval;
-
-    return
-        lower->value +
-        fraction *
-        (
-            upper->value -
-            lower->value
-        );
+    CubicSpline spline;
+    spline.build(xs, ys);
+    return spline.evaluate(mach);
 }
 
 } // namespace

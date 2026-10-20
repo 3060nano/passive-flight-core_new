@@ -22,6 +22,7 @@ add_library(
         src/StandardAtmosphere.cpp
         src/Aerodynamics.cpp
         src/TabulatedAerodynamicModel.cpp
+        src/CubicSpline.cpp
         src/KnownObjects.cpp
         src/ObjectAerodynamicsAdapter.cpp
         src/NominalLongitudinalDynamics.cpp
