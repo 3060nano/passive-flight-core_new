@@ -43,7 +43,7 @@ void checkNear(
 passive_flight::PerturbedTrajectorySimulator
 makeSimulator() {
     const auto passport =
-        passive_flight::makeAbstract500UmpkPassport();
+        passive_flight::makeFab1500TPostnikovPassport();
 
     return passive_flight::PerturbedTrajectorySimulator(
         passport.object
@@ -52,7 +52,7 @@ makeSimulator() {
 
 passive_flight::SimulationRequest makeRequest() {
     return {
-        "ABSTRACT_500_UMPK_V1",
+        "FAB_1500T_POSTNIKOV_1979",
         {100.0, 200.0}
     };
 }

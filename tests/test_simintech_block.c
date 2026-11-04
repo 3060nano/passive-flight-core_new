@@ -89,6 +89,13 @@ int main(void) {
 
     int index;
     double baselineFallTimeS;
+    double expectedDownrangeM;
+    double expectedFallTimeS;
+    double expectedImpactSpeedMps;
+    double expectedImpactPathAngleRad;
+    double expectedImpactPitchAngleRad;
+    double expectedImpactAttackAngleRad;
+    int32_t expectedTerminationReason;
 
     memset(
         &solverData,
@@ -205,6 +212,22 @@ int main(void) {
     values[1] = 200.0;
     values[2] = 0.0;
 
+    require(
+        pfSimInTechCalculate(
+            "FAB_1500T_POSTNIKOV_1979",
+            values[0],
+            values[1],
+            &expectedDownrangeM,
+            &expectedFallTimeS,
+            &expectedImpactSpeedMps,
+            &expectedImpactPathAngleRad,
+            &expectedImpactPitchAngleRad,
+            &expectedImpactAttackAngleRad,
+            &expectedTerminationReason
+        ) == PF_RESULT_OK,
+        "Reference C API calculation failed"
+    );
+
     initResult =
         INIT_FUNC(
             0.001,
@@ -248,58 +271,52 @@ int main(void) {
         "RUN_FUNC failed"
     );
 
-    /*
-     * Контрольная точка актуальной базовой модели:
-     *
-     * x_CM = 1.15 м;
-     * дозвуковая таблица d epsilon / d alpha ~= 0.57.
-     */
     requireNear(
         values[3],
-        1156.434,
-        1.0,
+        expectedDownrangeM,
+        1.0e-9,
         "Incorrect downrange"
     );
 
     requireNear(
         values[4],
-        6.14978,
-        0.01,
+        expectedFallTimeS,
+        1.0e-12,
         "Incorrect fall time"
     );
 
     requireNear(
         values[5],
-        180.761,
-        0.1,
+        expectedImpactSpeedMps,
+        1.0e-9,
         "Incorrect impact speed"
     );
 
-    require(
-        values[6] < 0.0,
-        "Impact path angle must be negative"
+    requireNear(
+        values[6],
+        expectedImpactPathAngleRad,
+        1.0e-12,
+        "Incorrect impact path angle"
     );
 
-    require(
-        values[7] < 0.0,
-        "Impact pitch angle must be negative"
+    requireNear(
+        values[7],
+        expectedImpactPitchAngleRad,
+        1.0e-12,
+        "Incorrect impact pitch angle"
     );
 
-    /*
-     * При текущей балансировке конечный угол атаки
-     * очень мал и слегка отрицателен.
-     */
     requireNear(
         values[8],
-        -0.000900112,
-        1.0e-4,
+        expectedImpactAttackAngleRad,
+        1.0e-12,
         "Incorrect impact angle of attack"
     );
 
     requireNear(
         values[9],
         (double)
-            PF_TERMINATION_GROUND_REACHED,
+            expectedTerminationReason,
         0.0,
         "Incorrect termination reason"
     );
@@ -325,6 +342,22 @@ int main(void) {
      */
     values[0] = 1000.0;
 
+    require(
+        pfSimInTechCalculate(
+            "FAB_1500T_POSTNIKOV_1979",
+            values[0],
+            values[1],
+            &expectedDownrangeM,
+            &expectedFallTimeS,
+            &expectedImpactSpeedMps,
+            &expectedImpactPathAngleRad,
+            &expectedImpactPitchAngleRad,
+            &expectedImpactAttackAngleRad,
+            &expectedTerminationReason
+        ) == PF_RESULT_OK,
+        "Updated reference C API calculation failed"
+    );
+
     runResult =
         RUN_FUNC(
             f_UpdateOuts,
@@ -347,13 +380,22 @@ int main(void) {
         "Second RUN_FUNC call failed"
     );
 
-    require(
-        values[3] > 3000.0,
-        "Changed altitude did not update range"
+    requireNear(
+        values[3],
+        expectedDownrangeM,
+        1.0e-9,
+        "Changed altitude produced incorrect range"
+    );
+
+    requireNear(
+        values[4],
+        expectedFallTimeS,
+        1.0e-12,
+        "Changed altitude produced incorrect fall time"
     );
 
     require(
-        values[4] > baselineFallTimeS,
+        expectedFallTimeS > baselineFallTimeS,
         "Changed altitude did not increase fall time"
     );
 

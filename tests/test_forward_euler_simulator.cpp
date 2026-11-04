@@ -44,7 +44,7 @@ struct TestContext {
 
     TestContext()
         : passport(
-              passive_flight::makeAbstract500UmpkPassport()
+              passive_flight::makeFab1500TPostnikovPassport()
           ),
           simulator(
               passport.object

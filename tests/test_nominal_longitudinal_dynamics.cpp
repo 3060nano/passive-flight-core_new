@@ -68,7 +68,7 @@ void checkThrows(
 passive_flight::NominalLongitudinalDynamics
 makeDynamics() {
     const auto passport =
-        passive_flight::makeAbstract500UmpkPassport();
+        passive_flight::makeFab1500TPostnikovPassport();
 
     return passive_flight::NominalLongitudinalDynamics(
         passport.object
@@ -280,7 +280,7 @@ void testDimensionedLoads() {
     const double expectedMomentNm =
         result.dynamicPressurePa *
         dynamics.object().reference.areaM2 *
-        dynamics.object().reference.meanAerodynamicChordM *
+        dynamics.object().reference.referenceLengthM *
         result.aerodynamics.mz;
 
     checkNear(

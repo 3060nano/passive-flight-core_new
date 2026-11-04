@@ -237,7 +237,7 @@ ValidationResult runValidation(
     double perturbationScale
 ) {
     const auto passport =
-        passive_flight::makeAbstract500UmpkPassport();
+        passive_flight::makeFab1500TPostnikovPassport();
 
     const passive_flight::PerturbedTrajectorySimulator simulator(
         passport.object

@@ -135,24 +135,6 @@ ObjectModel makeFab1500TPostnikovModel() {
         0.58;
 
     /*
-     * Табличная аэродинамика уже включает влияние
-     * реальной формы бомбы. Поэтому для текущей
-     * проверки не вводим фиктивную геометрию
-     * крыла, стабилизатора или носовой части.
-     */
-    object.body.noseLengthM =
-        0.0;
-
-    object.body.tailLengthM =
-        0.0;
-
-    object.body.noseShape =
-        NoseShape::Unspecified;
-
-    object.body.zeroLiftDragCoefficientOnFrontalArea =
-        0.0;
-
-    /*
      * Характерная площадь — площадь миделя:
      *
      *     S = pi * D^2 / 4.
@@ -162,16 +144,6 @@ ObjectModel makeFab1500TPostnikovModel() {
         object.body.diameterM *
         object.body.diameterM /
         4.0;
-
-    /*
-     * Для табличной бомбы span и САХ отсутствуют.
-     * Эти поля не используются Tabulated-моделью.
-     */
-    object.reference.spanM =
-        0.0;
-
-    object.reference.meanAerodynamicChordM =
-        0.0;
 
     /*
      * В коэффициенте момента источника

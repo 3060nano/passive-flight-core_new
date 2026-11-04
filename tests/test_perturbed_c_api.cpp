@@ -51,7 +51,7 @@ makeBaseInput() {
     PFPerturbedSimulationInput input{};
 
     input.objectId =
-        "ABSTRACT_500_UMPK_V1";
+        "FAB_1500T_POSTNIKOV_1979";
 
     input.releaseAltitudeM =
         100.0;
@@ -67,8 +67,9 @@ void testVersion() {
         pfGetPerturbedApiVersion();
 
     require(
-        version != nullptr,
-        "Perturbed API version is null"
+        version != nullptr &&
+            std::string(version) == "1.1.0",
+        "Perturbed API version mismatch"
     );
 }
 

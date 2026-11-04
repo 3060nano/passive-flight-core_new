@@ -120,7 +120,6 @@ void testKnownAerodynamicNode() {
     input.mach = 0.90;
     input.angleOfAttackRad = 0.10;
     input.pitchRateRadS = 0.20;
-    input.angleOfAttackRateRadS = 0.0;
     input.speedMps = 250.0;
 
     const auto coefficients =

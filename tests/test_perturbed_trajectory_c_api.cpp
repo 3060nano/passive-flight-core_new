@@ -51,7 +51,7 @@ PFPerturbedSimulationInput makeInput() {
     PFPerturbedSimulationInput input{};
 
     input.objectId =
-        "ABSTRACT_500_UMPK_V1";
+        "FAB_1500T_POSTNIKOV_1979";
 
     input.releaseAltitudeM =
         100.0;

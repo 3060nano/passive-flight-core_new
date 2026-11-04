@@ -94,6 +94,13 @@ int main(void) {
 
     void* locals;
     double fallTimeS;
+    double expectedDownrangeM;
+    double expectedFallTimeS;
+    double expectedImpactSpeedMps;
+    double expectedImpactPathAngleRad;
+    double expectedImpactPitchAngleRad;
+    double expectedImpactAttackAngleRad;
+    int32_t expectedTerminationReason;
     int index;
     int result;
 
@@ -174,6 +181,28 @@ int main(void) {
     values[TEST_INPUT_ALTITUDE] = 100.0;
     values[TEST_INPUT_SPEED] = 200.0;
     values[TEST_INPUT_OBJECT_INDEX] = 0.0;
+
+    require(
+        pfSimInTechCalculate(
+            "FAB_1500T_POSTNIKOV_1979",
+            values[TEST_INPUT_ALTITUDE],
+            values[TEST_INPUT_SPEED],
+            &expectedDownrangeM,
+            &expectedFallTimeS,
+            &expectedImpactSpeedMps,
+            &expectedImpactPathAngleRad,
+            &expectedImpactPitchAngleRad,
+            &expectedImpactAttackAngleRad,
+            &expectedTerminationReason
+        ) == PF_RESULT_OK,
+        "Reference C API calculation failed"
+    );
+
+    require(
+        expectedTerminationReason ==
+            PF_TERMINATION_GROUND_REACHED,
+        "Reference calculation did not reach ground"
+    );
 
     result = INIT_FUNC(
         0.001,
@@ -263,8 +292,8 @@ int main(void) {
 
     requireNear(
         fallTimeS,
-        6.14978,
-        0.01,
+        expectedFallTimeS,
+        1.0e-12,
         "Fall time is incorrect"
     );
 
@@ -346,8 +375,8 @@ int main(void) {
     );
     requireNear(
         values[TEST_OUTPUT_DOWNRANGE],
-        1156.434,
-        1.0,
+        expectedDownrangeM,
+        1.0e-9,
         "Final downrange is incorrect"
     );
     requireNear(
@@ -358,27 +387,27 @@ int main(void) {
     );
     requireNear(
         values[TEST_OUTPUT_SPEED],
-        180.761,
-        0.1,
+        expectedImpactSpeedMps,
+        1.0e-9,
         "Final speed is incorrect"
     );
-    require(
-        values[TEST_OUTPUT_PATH_ANGLE] < 0.0,
-        "Final flight path angle must be negative"
+    requireNear(
+        values[TEST_OUTPUT_PATH_ANGLE],
+        expectedImpactPathAngleRad,
+        1.0e-12,
+        "Final flight path angle is incorrect"
     );
-    require(
-        values[TEST_OUTPUT_PITCH_ANGLE] < 0.0,
-        "Final pitch angle must be negative"
+    requireNear(
+        values[TEST_OUTPUT_PITCH_ANGLE],
+        expectedImpactPitchAngleRad,
+        1.0e-12,
+        "Final pitch angle is incorrect"
     );
 
-    /*
-     * При текущем запасе статической устойчивости
-     * конечный угол атаки мал и слегка отрицателен.
-     */
     requireNear(
         values[TEST_OUTPUT_ATTACK_ANGLE],
-        -0.000900112,
-        1.0e-4,
+        expectedImpactAttackAngleRad,
+        1.0e-12,
         "Final angle of attack is incorrect"
     );
 

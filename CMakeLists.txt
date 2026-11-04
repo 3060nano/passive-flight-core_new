@@ -20,7 +20,6 @@ add_library(
         src/ModelContract.cpp
         src/ObjectPassport.cpp
         src/StandardAtmosphere.cpp
-        src/Aerodynamics.cpp
         src/TabulatedAerodynamicModel.cpp
         src/CubicSpline.cpp
         src/KnownObjects.cpp
@@ -29,9 +28,7 @@ add_library(
         src/PerturbedLongitudinalDynamics.cpp
         src/ForwardEulerSimulator.cpp
         src/PerturbedTrajectorySimulator.cpp
-        src/PerturbedTrajectoryCsv.cpp
         src/PerturbedImpactAnalysis.cpp
-        src/TrajectoryAnalysis.cpp
         src/ObjectRegistry.cpp
 )
 
@@ -121,28 +118,6 @@ if (MINGW)
             -static-libstdc++
     )
 endif ()
-
-add_executable(
-        passive_flight_demo
-        apps/nominal_flight_demo.cpp
-)
-
-target_link_libraries(
-        passive_flight_demo
-        PRIVATE
-        passive_flight_core
-)
-
-add_executable(
-        passive_flight_perturbed_demo
-        apps/perturbed_flight_demo.cpp
-)
-
-target_link_libraries(
-        passive_flight_perturbed_demo
-        PRIVATE
-        passive_flight_core
-)
 
 add_executable(
         passive_flight_dll_smoke_test
@@ -407,12 +382,6 @@ if (BUILD_TESTING)
     )
 
     add_core_test(
-            test_aerodynamics
-            tests/test_aerodynamics.cpp
-            aerodynamics
-    )
-
-    add_core_test(
             test_tabulated_aerodynamic_model
             tests/test_tabulated_aerodynamic_model.cpp
             tabulated_aerodynamic_model
@@ -455,12 +424,6 @@ if (BUILD_TESTING)
     )
 
     add_core_test(
-            test_perturbed_trajectory_csv
-            tests/test_perturbed_trajectory_csv.cpp
-            perturbed_trajectory_csv
-    )
-
-    add_core_test(
             test_perturbed_impact_analysis
             tests/test_perturbed_impact_analysis.cpp
             perturbed_impact_analysis
@@ -476,12 +439,6 @@ if (BUILD_TESTING)
             test_perturbed_impact_validation
             tests/test_perturbed_impact_validation.cpp
             perturbed_impact_validation
-    )
-
-    add_core_test(
-            test_trajectory_analysis
-            tests/test_trajectory_analysis.cpp
-            trajectory_analysis
     )
 
     add_core_test(

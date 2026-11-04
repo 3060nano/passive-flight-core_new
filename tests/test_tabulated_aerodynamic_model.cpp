@@ -123,7 +123,6 @@ void testNodeValues() {
     input.mach = 0.5;
     input.angleOfAttackRad = 0.1;
     input.pitchRateRadS = 0.2;
-    input.angleOfAttackRateRadS = 0.0;
     input.speedMps = 200.0;
 
     const auto result =

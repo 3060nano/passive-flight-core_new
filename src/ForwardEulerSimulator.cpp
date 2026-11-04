@@ -98,7 +98,7 @@ StepDiagnostics makeStepDiagnostics(
     diagnostics.reynolds =
         evaluation.atmosphere.densityKgM3 *
         state.speedMps *
-        object.reference.meanAerodynamicChordM /
+        object.body.diameterM /
         evaluation.atmosphere.dynamicViscosityPaS;
 
     diagnostics.dynamicPressurePa =

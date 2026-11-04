@@ -179,40 +179,34 @@ NominalLongitudinalDynamics::evaluate(
     const double angleOfAttackRad =
         state.angleOfAttackRad();
 
-    AerodynamicInput preliminaryInput;
+    AerodynamicInput aerodynamicInput;
 
-    preliminaryInput.mach =
+    aerodynamicInput.mach =
         mach;
 
-    preliminaryInput.angleOfAttackRad =
+    aerodynamicInput.angleOfAttackRad =
         angleOfAttackRad;
 
-    preliminaryInput.pitchRateRadS =
+    aerodynamicInput.pitchRateRadS =
         pitchRateRadS;
 
-    preliminaryInput.angleOfAttackRateRadS =
-        0.0;
-
-    preliminaryInput.speedMps =
+    aerodynamicInput.speedMps =
         speedMps;
 
-    const AerodynamicCoefficients
-        preliminaryAerodynamics =
-            aerodynamics_->evaluate(
-                preliminaryInput
-            );
+    const AerodynamicCoefficients aerodynamicCoefficients =
+        aerodynamics_->evaluate(aerodynamicInput);
 
-    const double preliminaryNormalForceN =
+    const double normalForceN =
         dynamicPressurePa *
         object_.reference.areaM2 *
-        preliminaryAerodynamics.cy;
+        aerodynamicCoefficients.cy;
 
     const double gravityMps2 =
         atmosphere_.parameters().gravityMps2;
 
     const double trajectoryAngleDerivativeRadS =
         (
-            preliminaryNormalForceN -
+            normalForceN -
             massKg *
             gravityMps2 *
             std::cos(trajectoryAngleRad)
@@ -226,29 +220,6 @@ NominalLongitudinalDynamics::evaluate(
         pitchRateRadS -
         trajectoryAngleDerivativeRadS;
 
-    AerodynamicInput finalInput;
-
-    finalInput.mach =
-        mach;
-
-    finalInput.angleOfAttackRad =
-        angleOfAttackRad;
-
-    finalInput.pitchRateRadS =
-        pitchRateRadS;
-
-    finalInput.angleOfAttackRateRadS =
-        angleOfAttackRateRadS;
-
-    finalInput.speedMps =
-        speedMps;
-
-    const AerodynamicCoefficients
-        aerodynamicCoefficients =
-            aerodynamics_->evaluate(
-                finalInput
-            );
-
     LongitudinalAerodynamicLoads loads;
 
     loads.dragN =
@@ -256,21 +227,14 @@ NominalLongitudinalDynamics::evaluate(
         object_.reference.areaM2 *
         aerodynamicCoefficients.cx;
 
-    loads.normalForceN =
-        dynamicPressurePa *
-        object_.reference.areaM2 *
-        aerodynamicCoefficients.cy;
+    loads.normalForceN = normalForceN;
 
     /*
-     * Универсальная размеризация момента:
+     * Размеризация момента ФАБ-1500Т:
      *
-     *     Mz = q * S_ref * L_ref * mz.
+     *     Mz = q * S_ref * L_ref * mz,
      *
-     * Для текущего ABSTRACT_500 L_ref временно
-     * автоматически равна САХ крыла.
-     *
-     * Для ФАБ-1500Т на следующем этапе
-     * L_ref будет равна длине бомбы.
+     * где S_ref — площадь миделя, L_ref — длина бомбы.
      */
     loads.pitchingMomentNm =
         dynamicPressurePa *

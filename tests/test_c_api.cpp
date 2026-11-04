@@ -130,7 +130,7 @@ PFSimulationInput makeInput() {
     PFSimulationInput input{};
 
     input.objectId =
-        "ABSTRACT_500_UMPK_V1";
+        "FAB_1500T_POSTNIKOV_1979";
 
     input.releaseAltitudeM =
         100.0;
@@ -167,7 +167,7 @@ void testApiVersion() {
 
     require(
         std::string(version) ==
-            "1.1.0",
+            "1.2.0",
         "API version is incorrect"
     );
 }
@@ -194,30 +194,19 @@ void testResultCodeNames() {
 
 void testObjectList() {
     require(
-        pfGetObjectCount() == 2,
-        "C API must expose two objects"
+        pfGetObjectCount() == 1,
+        "C API must expose only FAB-1500T"
     );
 
     require(
         getObjectId(0) ==
-            "ABSTRACT_500_UMPK_V1",
+            "FAB_1500T_POSTNIKOV_1979",
         "First C API object ID is incorrect"
     );
 
     require(
         !getObjectDisplayName(0).empty(),
         "First C API object name is empty"
-    );
-
-    require(
-        getObjectId(1) ==
-            "FAB_1500T_POSTNIKOV_1979",
-        "Second C API object ID is incorrect"
-    );
-
-    require(
-        !getObjectDisplayName(1).empty(),
-        "Second C API object name is empty"
     );
 
     uint64_t requiredSize = 0;
@@ -776,7 +765,7 @@ void testSimInTechSummaryValidation() {
 
     const int32_t nullOutputResult =
         pfSimInTechCalculate(
-            "ABSTRACT_500_UMPK_V1",
+            "FAB_1500T_POSTNIKOV_1979",
             100.0,
             200.0,
             nullptr,
@@ -816,7 +805,7 @@ void testSimInTechSummaryValidation() {
 
     const int32_t invalidSpeedResult =
         pfSimInTechCalculate(
-            "ABSTRACT_500_UMPK_V1",
+            "FAB_1500T_POSTNIKOV_1979",
             100.0,
             0.0,
             &downrangeM,
@@ -976,7 +965,7 @@ void testSimInTechTrajectoryValidation() {
 
     const int32_t partialArraysResult =
         pfSimInTechCalculateTrajectory(
-            "ABSTRACT_500_UMPK_V1",
+            "FAB_1500T_POSTNIKOV_1979",
             100.0,
             200.0,
             &timeS,
@@ -995,7 +984,7 @@ void testSimInTechTrajectoryValidation() {
 
     const int32_t nullCounterResult =
         pfSimInTechCalculateTrajectory(
-            "ABSTRACT_500_UMPK_V1",
+            "FAB_1500T_POSTNIKOV_1979",
             100.0,
             200.0,
             nullptr,

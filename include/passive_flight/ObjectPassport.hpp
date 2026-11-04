@@ -50,12 +50,6 @@ struct ObjectPassport {
 };
 
 /*
- * Создаёт паспорт абстрактного крылатого объекта.
- */
-[[nodiscard]]
-ObjectPassport makeAbstract500UmpkPassport();
-
-/*
  * Создаёт полный контрольный паспорт ФАБ-1500Т
  * с готовыми табличными аэродинамическими
  * характеристиками.
@@ -95,11 +89,6 @@ ValidationIssues validate(
 [[nodiscard]]
 const char* parameterStatusName(
     ParameterStatus status
-) noexcept;
-
-[[nodiscard]]
-const char* noseShapeName(
-    NoseShape shape
 ) noexcept;
 
 [[nodiscard]]

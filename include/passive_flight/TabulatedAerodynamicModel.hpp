@@ -1,6 +1,7 @@
 #pragma once
 
 #include "passive_flight/Aerodynamics.hpp"
+#include "passive_flight/CubicSpline.hpp"
 #include "passive_flight/TabulatedAerodynamicData.hpp"
 
 namespace passive_flight {
@@ -54,6 +55,12 @@ namespace passive_flight {
     private:
         double referenceLengthM_{0.0};
         TabulatedAerodynamicData data_;
+
+        CubicSpline cx0Spline_;
+        CubicSpline cxAlphaSquaredSpline_;
+        CubicSpline cyAlphaSpline_;
+        CubicSpline mzAlphaSpline_;
+        CubicSpline mzPitchRateSpline_;
     };
 
 } // namespace passive_flight

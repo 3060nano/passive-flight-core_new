@@ -73,7 +73,7 @@ void checkThrows(
 passive_flight::PerturbedLongitudinalDynamics
 makeDynamics() {
     const auto passport =
-        passive_flight::makeAbstract500UmpkPassport();
+        passive_flight::makeFab1500TPostnikovPassport();
 
     return passive_flight::PerturbedLongitudinalDynamics(
         passport.object
@@ -320,7 +320,7 @@ void testLinearPredictionMatchesNonlinearDifference() {
 
 void testInvalidOptionsAndPerturbationAreRejected() {
     const auto passport =
-        passive_flight::makeAbstract500UmpkPassport();
+        passive_flight::makeFab1500TPostnikovPassport();
 
     passive_flight::PerturbationLinearizationOptions
         invalidOptions;

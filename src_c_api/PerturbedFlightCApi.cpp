@@ -224,7 +224,7 @@ extern "C" {
 
 const char* PF_CALL
 pfGetPerturbedApiVersion(void) {
-    return "1.0.0";
+    return "1.1.0";
 }
 
 int32_t PF_CALL
