@@ -2,6 +2,7 @@
 
 #include "passive_flight_c_api/PassiveFlightCApi.h"
 #include "passive_flight_c_api/PerturbedFlightCApi.h"
+#include "SimInTechUnits.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -28,18 +29,18 @@
  * 9  — Delta t_f, s;
  * 10 — Delta L, m;
  * 11 — Delta V_impact, m/s;
- * 12 — Delta Theta_impact, rad;
- * 13 — Delta omega_z_impact, rad/s;
- * 14 — Delta theta_impact, rad;
- * 15 — Delta alpha_impact, rad;
+ * 12 — Delta Theta_impact, deg;
+ * 13 — Delta omega_z_impact, deg/s;
+ * 14 — Delta theta_impact, deg;
+ * 15 — Delta alpha_impact, deg;
  *
  * 16 — perturbed impact time, s;
  * 17 — perturbed impact downrange, m;
  * 18 — perturbed impact speed, m/s;
- * 19 — perturbed impact Theta, rad;
- * 20 — perturbed impact omega_z, rad/s;
- * 21 — perturbed impact theta, rad;
- * 22 — perturbed impact alpha, rad;
+ * 19 — perturbed impact Theta, deg;
+ * 20 — perturbed impact omega_z, deg/s;
+ * 21 — perturbed impact theta, deg;
+ * 22 — perturbed impact alpha, deg;
  *
  * 23 — terminationReason;
  * 24 — resultCode.
@@ -264,7 +265,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:3",
-        "Delta impact Theta, rad",
+        "Delta impact Theta, deg",
         &defaultDeltaImpactPathAngleRad,
         vt_double,
         {1, 0, 0},
@@ -275,7 +276,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:4",
-        "Delta impact omega_z, rad/s",
+        "Delta impact omega_z, deg/s",
         &defaultDeltaImpactPitchRateRadps,
         vt_double,
         {1, 0, 0},
@@ -286,7 +287,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:5",
-        "Delta impact theta, rad",
+        "Delta impact theta, deg",
         &defaultDeltaImpactPitchAngleRad,
         vt_double,
         {1, 0, 0},
@@ -297,7 +298,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:6",
-        "Delta impact alpha, rad",
+        "Delta impact alpha, deg",
         &defaultDeltaImpactAttackAngleRad,
         vt_double,
         {1, 0, 0},
@@ -341,7 +342,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:10",
-        "Perturbed impact Theta, rad",
+        "Perturbed impact Theta, deg",
         &defaultImpactPathAngleRad,
         vt_double,
         {1, 0, 0},
@@ -352,7 +353,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:11",
-        "Perturbed impact omega_z, rad/s",
+        "Perturbed impact omega_z, deg/s",
         &defaultImpactPitchRateRadps,
         vt_double,
         {1, 0, 0},
@@ -363,7 +364,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:12",
-        "Perturbed impact theta, rad",
+        "Perturbed impact theta, deg",
         &defaultImpactPitchAngleRad,
         vt_double,
         {1, 0, 0},
@@ -374,7 +375,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:13",
-        "Perturbed impact alpha, rad",
+        "Perturbed impact alpha, deg",
         &defaultImpactAttackAngleRad,
         vt_double,
         {1, 0, 0},
@@ -428,7 +429,7 @@ typedef struct PFPerturbedSimInTechLocalState {
 static TTaskInfoStruct taskInfo;
 
 static const unsigned int schemeHash32 =
-    0x50465031U;
+    0x50465032U;
 
 static double* externalDouble(
     void** extVarsAddress,
@@ -531,25 +532,33 @@ static void writeLocalResultToPorts(
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_DELTA_IMPACT_PATH_ANGLE_INDEX,
-        output->deltaImpactFlightPathAngleRad
+        pfSimInTechRadiansToDegrees(
+            output->deltaImpactFlightPathAngleRad
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_DELTA_IMPACT_PITCH_RATE_INDEX,
-        output->deltaImpactPitchRateRadps
+        pfSimInTechRadiansToDegrees(
+            output->deltaImpactPitchRateRadps
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_DELTA_IMPACT_PITCH_ANGLE_INDEX,
-        output->deltaImpactPitchAngleRad
+        pfSimInTechRadiansToDegrees(
+            output->deltaImpactPitchAngleRad
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_DELTA_IMPACT_ATTACK_ANGLE_INDEX,
-        output->deltaImpactAngleOfAttackRad
+        pfSimInTechRadiansToDegrees(
+            output->deltaImpactAngleOfAttackRad
+        )
     );
 
     writeExternalDouble(
@@ -573,25 +582,33 @@ static void writeLocalResultToPorts(
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_IMPACT_PATH_ANGLE_INDEX,
-        output->perturbedImpactFlightPathAngleRad
+        pfSimInTechRadiansToDegrees(
+            output->perturbedImpactFlightPathAngleRad
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_IMPACT_PITCH_RATE_INDEX,
-        output->perturbedImpactPitchRateRadps
+        pfSimInTechRadiansToDegrees(
+            output->perturbedImpactPitchRateRadps
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_IMPACT_PITCH_ANGLE_INDEX,
-        output->perturbedImpactPitchAngleRad
+        pfSimInTechRadiansToDegrees(
+            output->perturbedImpactPitchAngleRad
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_P_IMPACT_ATTACK_ANGLE_INDEX,
-        output->perturbedImpactAngleOfAttackRad
+        pfSimInTechRadiansToDegrees(
+            output->perturbedImpactAngleOfAttackRad
+        )
     );
 
     writeExternalDouble(

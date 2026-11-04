@@ -1,5 +1,6 @@
 #include "passive_flight_simintech/SimInTechBlockApi.h"
 #include "passive_flight_c_api/PassiveFlightCApi.h"
+#include "SimInTechUnits.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -151,7 +152,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:4",
-        "Current flight path angle, rad",
+        "Current flight path angle, deg",
         &defaultFlightPathAngleRad,
         vt_double,
         {1, 0, 0},
@@ -162,7 +163,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:5",
-        "Current pitch angle, rad",
+        "Current pitch angle, deg",
         &defaultPitchAngleRad,
         vt_double,
         {1, 0, 0},
@@ -173,7 +174,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:6",
-        "Current pitch rate, rad/s",
+        "Current pitch rate, deg/s",
         &defaultPitchRateRadps,
         vt_double,
         {1, 0, 0},
@@ -184,7 +185,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:7",
-        "Current angle of attack, rad",
+        "Current angle of attack, deg",
         &defaultAngleOfAttackRad,
         vt_double,
         {1, 0, 0},
@@ -245,7 +246,7 @@ typedef struct PFSimInTechTrajectoryLocalState {
 static TTaskInfoStruct taskInfo;
 
 static const unsigned int schemeHash32 =
-    0x50465431U;
+    0x50465432U;
 
 static double* externalDouble(
     void** extVarsAddress,
@@ -769,22 +770,30 @@ static void writeTrajectoryOutputs(
     writeExternalDouble(
         extVarsAddress,
         PF_TRAJECTORY_OUTPUT_PATH_ANGLE,
-        point.flightPathAngleRad
+        pfSimInTechRadiansToDegrees(
+            point.flightPathAngleRad
+        )
     );
     writeExternalDouble(
         extVarsAddress,
         PF_TRAJECTORY_OUTPUT_PITCH_ANGLE,
-        point.pitchAngleRad
+        pfSimInTechRadiansToDegrees(
+            point.pitchAngleRad
+        )
     );
     writeExternalDouble(
         extVarsAddress,
         PF_TRAJECTORY_OUTPUT_PITCH_RATE,
-        point.pitchRateRadps
+        pfSimInTechRadiansToDegrees(
+            point.pitchRateRadps
+        )
     );
     writeExternalDouble(
         extVarsAddress,
         PF_TRAJECTORY_OUTPUT_ATTACK_ANGLE,
-        point.angleOfAttackRad
+        pfSimInTechRadiansToDegrees(
+            point.angleOfAttackRad
+        )
     );
     writeExternalDouble(
         extVarsAddress,

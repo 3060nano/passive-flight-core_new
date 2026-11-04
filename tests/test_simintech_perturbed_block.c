@@ -1,6 +1,7 @@
 #include "passive_flight_simintech/SimInTechBlockApi.h"
 
 #include "passive_flight_c_api/PassiveFlightCApi.h"
+#include "passive_flight_c_api/PerturbedFlightCApi.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -53,6 +54,15 @@ static void requireNear(
     }
 }
 
+/* Переводит эталонные углы C API из радиан в градусы. */
+static double radiansToDegrees(
+    double valueRad
+) {
+    return
+        valueRad *
+        57.2957795130823208768;
+}
+
 int main(void) {
     int nExtVars = 0;
     int nDinVars = 0;
@@ -93,6 +103,9 @@ int main(void) {
     int infoResult;
     int initResult;
     int runResult;
+
+    PFPerturbedSimulationInput referenceInput;
+    PFPerturbedImpactOutput referenceOutput;
 
     memset(
         &solverData,
@@ -250,6 +263,111 @@ int main(void) {
     require(
         runResult == r_Success,
         "RUN_FUNC failed"
+    );
+
+    memset(
+        &referenceInput,
+        0,
+        sizeof(referenceInput)
+    );
+
+    referenceInput.objectId =
+        "FAB_1500T_POSTNIKOV_1979";
+    referenceInput.releaseAltitudeM = values[0];
+    referenceInput.releaseSpeedMps = values[1];
+    referenceInput.deltaSpeedMps = values[3];
+    referenceInput.deltaFlightPathAngleRad = values[4];
+    referenceInput.deltaPitchRateRadps = values[5];
+    referenceInput.deltaPitchAngleRad = values[6];
+    referenceInput.deltaDownrangeM = values[7];
+    referenceInput.deltaAltitudeM = values[8];
+
+    require(
+        pfCalculatePerturbedImpact(
+            &referenceInput,
+            &referenceOutput
+        ) == PF_RESULT_OK,
+        "Reference perturbed calculation failed"
+    );
+
+    requireNear(
+        values[12],
+        radiansToDegrees(
+            referenceOutput
+                .deltaImpactFlightPathAngleRad
+        ),
+        1.0e-12,
+        "Delta impact Theta is not in degrees"
+    );
+
+    requireNear(
+        values[13],
+        radiansToDegrees(
+            referenceOutput
+                .deltaImpactPitchRateRadps
+        ),
+        1.0e-12,
+        "Delta impact omega_z is not in degrees per second"
+    );
+
+    requireNear(
+        values[14],
+        radiansToDegrees(
+            referenceOutput
+                .deltaImpactPitchAngleRad
+        ),
+        1.0e-12,
+        "Delta impact theta is not in degrees"
+    );
+
+    requireNear(
+        values[15],
+        radiansToDegrees(
+            referenceOutput
+                .deltaImpactAngleOfAttackRad
+        ),
+        1.0e-12,
+        "Delta impact alpha is not in degrees"
+    );
+
+    requireNear(
+        values[19],
+        radiansToDegrees(
+            referenceOutput
+                .perturbedImpactFlightPathAngleRad
+        ),
+        1.0e-12,
+        "Perturbed impact Theta is not in degrees"
+    );
+
+    requireNear(
+        values[20],
+        radiansToDegrees(
+            referenceOutput
+                .perturbedImpactPitchRateRadps
+        ),
+        1.0e-12,
+        "Perturbed impact omega_z is not in degrees per second"
+    );
+
+    requireNear(
+        values[21],
+        radiansToDegrees(
+            referenceOutput
+                .perturbedImpactPitchAngleRad
+        ),
+        1.0e-12,
+        "Perturbed impact theta is not in degrees"
+    );
+
+    requireNear(
+        values[22],
+        radiansToDegrees(
+            referenceOutput
+                .perturbedImpactAngleOfAttackRad
+        ),
+        1.0e-12,
+        "Perturbed impact alpha is not in degrees"
     );
 
     requireNear(

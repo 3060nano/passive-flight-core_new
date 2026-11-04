@@ -1,5 +1,6 @@
 #include "passive_flight_simintech/SimInTechBlockApi.h"
 #include "passive_flight_c_api/PassiveFlightCApi.h"
+#include "SimInTechUnits.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -20,9 +21,9 @@
  * 3  — downrangeM;
  * 4  — fallTimeS;
  * 5  — impactSpeedMps;
- * 6  — impactFlightPathAngleRad;
- * 7  — impactPitchAngleRad;
- * 8  — impactAngleOfAttackRad;
+ * 6  — impactFlightPathAngleDeg;
+ * 7  — impactPitchAngleDeg;
+ * 8  — impactAngleOfAttackDeg;
  * 9  — terminationReason;
  * 10 — resultCode.
  *
@@ -166,7 +167,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:3",
-        "Impact flight path angle, rad",
+        "Impact flight path angle, deg",
         &defaultImpactPathAngleRad,
         vt_double,
         {1, 0, 0},
@@ -177,7 +178,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:4",
-        "Impact pitch angle, rad",
+        "Impact pitch angle, deg",
         &defaultImpactPitchAngleRad,
         vt_double,
         {1, 0, 0},
@@ -188,7 +189,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:5",
-        "Impact angle of attack, rad",
+        "Impact angle of attack, deg",
         &defaultImpactAttackAngleRad,
         vt_double,
         {1, 0, 0},
@@ -249,7 +250,7 @@ typedef struct PFSimInTechLocalState {
 static TTaskInfoStruct taskInfo;
 
 static const unsigned int schemeHash32 =
-    0x50465334U;
+    0x50465335U;
 
 static double* externalDouble(
     void** extVarsAddress,
@@ -349,19 +350,25 @@ static void writeLocalResultToPorts(
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_IMPACT_PATH_ANGLE_INDEX,
-        localState->impactFlightPathAngleRad
+        pfSimInTechRadiansToDegrees(
+            localState->impactFlightPathAngleRad
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_IMPACT_PITCH_ANGLE_INDEX,
-        localState->impactPitchAngleRad
+        pfSimInTechRadiansToDegrees(
+            localState->impactPitchAngleRad
+        )
     );
 
     writeExternalDouble(
         extVarsAddress,
         PF_SIT_IMPACT_ATTACK_ANGLE_INDEX,
-        localState->impactAngleOfAttackRad
+        pfSimInTechRadiansToDegrees(
+            localState->impactAngleOfAttackRad
+        )
     );
 
     writeExternalDouble(

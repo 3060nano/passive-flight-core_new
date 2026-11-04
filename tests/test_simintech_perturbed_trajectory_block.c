@@ -167,8 +167,14 @@ int main(void) {
     values[2] = 0.0;
 
     values[3] = 1.0;
-    values[4] = 0.0;
-    values[5] = 0.0;
+    values[4] =
+        0.05 *
+        3.14159265358979323846 /
+        180.0;
+    values[5] =
+        0.2 *
+        3.14159265358979323846 /
+        180.0;
     values[6] =
         0.1 *
         3.14159265358979323846 /
@@ -266,17 +272,31 @@ int main(void) {
     );
 
     requireNear(
-        values[22],
-        values[6],
+        values[20],
+        0.05,
         1.0e-12,
-        "Initial Delta theta is incorrect"
+        "Initial Delta Theta is not in degrees"
+    );
+
+    requireNear(
+        values[21],
+        0.2,
+        1.0e-12,
+        "Initial Delta omega_z is not in degrees per second"
+    );
+
+    requireNear(
+        values[22],
+        0.1,
+        1.0e-12,
+        "Initial Delta theta is not in degrees"
     );
 
     requireNear(
         values[23],
-        values[6],
+        0.05,
         1.0e-12,
-        "Initial Delta alpha is incorrect"
+        "Initial Delta alpha is not in degrees"
     );
 
     requireNear(
@@ -426,6 +446,8 @@ int main(void) {
      * Изменение Delta V0 должно инвалидировать кэш.
      */
     values[3] = 0.0;
+    values[4] = 0.0;
+    values[5] = 0.0;
     values[6] = 0.0;
 
     result =

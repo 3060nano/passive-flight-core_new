@@ -47,6 +47,15 @@ static void requireNear(
     }
 }
 
+/* Переводит эталонные углы C API из радиан в градусы. */
+static double radiansToDegrees(
+    double valueRad
+) {
+    return
+        valueRad *
+        57.2957795130823208768;
+}
+
 int main(void) {
     int nExtVars = 0;
     int nDinVars = 0;
@@ -294,21 +303,27 @@ int main(void) {
 
     requireNear(
         values[6],
-        expectedImpactPathAngleRad,
+        radiansToDegrees(
+            expectedImpactPathAngleRad
+        ),
         1.0e-12,
         "Incorrect impact path angle"
     );
 
     requireNear(
         values[7],
-        expectedImpactPitchAngleRad,
+        radiansToDegrees(
+            expectedImpactPitchAngleRad
+        ),
         1.0e-12,
         "Incorrect impact pitch angle"
     );
 
     requireNear(
         values[8],
-        expectedImpactAttackAngleRad,
+        radiansToDegrees(
+            expectedImpactAttackAngleRad
+        ),
         1.0e-12,
         "Incorrect impact angle of attack"
     );

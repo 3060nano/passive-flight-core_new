@@ -2,6 +2,7 @@
 
 #include "passive_flight_c_api/PassiveFlightCApi.h"
 #include "passive_flight_c_api/PerturbedTrajectoryCApi.h"
+#include "SimInTechUnits.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -246,7 +247,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:4",
-        "Nominal Theta, rad",
+        "Nominal Theta, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -257,7 +258,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:5",
-        "Nominal omega_z, rad/s",
+        "Nominal omega_z, deg/s",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -268,7 +269,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:6",
-        "Nominal theta, rad",
+        "Nominal theta, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -279,7 +280,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:7",
-        "Nominal alpha, rad",
+        "Nominal alpha, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -323,7 +324,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:11",
-        "Delta Theta, rad",
+        "Delta Theta, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -334,7 +335,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:12",
-        "Delta omega_z, rad/s",
+        "Delta omega_z, deg/s",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -345,7 +346,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:13",
-        "Delta theta, rad",
+        "Delta theta, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -356,7 +357,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:14",
-        "Delta alpha, rad",
+        "Delta alpha, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -400,7 +401,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:18",
-        "Total Theta, rad",
+        "Total Theta, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -411,7 +412,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:19",
-        "Total omega_z, rad/s",
+        "Total omega_z, deg/s",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -422,7 +423,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:20",
-        "Total theta, rad",
+        "Total theta, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -433,7 +434,7 @@ static ext_var_info_record externalVariables[
     },
     {
         "out:21",
-        "Total alpha, rad",
+        "Total alpha, deg",
         &defaultZero,
         vt_double,
         {1, 0, 0},
@@ -491,7 +492,7 @@ typedef struct PFPerturbedTrajectoryLocalState {
 static TTaskInfoStruct taskInfo;
 
 static const unsigned int schemeHash32 =
-    0x50465450U;
+    0x50465451U;
 
 static double* externalDouble(
     void** extVarsAddress,
@@ -980,26 +981,26 @@ static void writePoint(
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_DOWNRANGE, point->nominalDownrangeM);
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_ALTITUDE, point->nominalAltitudeM);
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_SPEED, point->nominalSpeedMps);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_PATH_ANGLE, point->nominalFlightPathAngleRad);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_PITCH_RATE, point->nominalPitchRateRadps);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_PITCH_ANGLE, point->nominalPitchAngleRad);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_ATTACK_ANGLE, point->nominalAngleOfAttackRad);
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_PATH_ANGLE, pfSimInTechRadiansToDegrees(point->nominalFlightPathAngleRad));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_PITCH_RATE, pfSimInTechRadiansToDegrees(point->nominalPitchRateRadps));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_PITCH_ANGLE, pfSimInTechRadiansToDegrees(point->nominalPitchAngleRad));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_NOMINAL_ATTACK_ANGLE, pfSimInTechRadiansToDegrees(point->nominalAngleOfAttackRad));
 
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_DOWNRANGE, point->deltaDownrangeM);
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_ALTITUDE, point->deltaAltitudeM);
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_SPEED, point->deltaSpeedMps);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_PATH_ANGLE, point->deltaFlightPathAngleRad);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_PITCH_RATE, point->deltaPitchRateRadps);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_PITCH_ANGLE, point->deltaPitchAngleRad);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_ATTACK_ANGLE, point->deltaAngleOfAttackRad);
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_PATH_ANGLE, pfSimInTechRadiansToDegrees(point->deltaFlightPathAngleRad));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_PITCH_RATE, pfSimInTechRadiansToDegrees(point->deltaPitchRateRadps));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_PITCH_ANGLE, pfSimInTechRadiansToDegrees(point->deltaPitchAngleRad));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_DELTA_ATTACK_ANGLE, pfSimInTechRadiansToDegrees(point->deltaAngleOfAttackRad));
 
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_DOWNRANGE, point->totalDownrangeM);
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_ALTITUDE, point->totalAltitudeM);
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_SPEED, point->totalSpeedMps);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_PATH_ANGLE, point->totalFlightPathAngleRad);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_PITCH_RATE, point->totalPitchRateRadps);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_PITCH_ANGLE, point->totalPitchAngleRad);
-    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_ATTACK_ANGLE, point->totalAngleOfAttackRad);
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_PATH_ANGLE, pfSimInTechRadiansToDegrees(point->totalFlightPathAngleRad));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_PITCH_RATE, pfSimInTechRadiansToDegrees(point->totalPitchRateRadps));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_PITCH_ANGLE, pfSimInTechRadiansToDegrees(point->totalPitchAngleRad));
+    writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_TOTAL_ATTACK_ANGLE, pfSimInTechRadiansToDegrees(point->totalAngleOfAttackRad));
 
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_FALL_TIME, fallTimeS);
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_FINISHED, finished);
