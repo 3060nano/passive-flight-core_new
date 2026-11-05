@@ -130,6 +130,12 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+add_executable(test_model_comparison
+        tests/test_model_comparison.cpp
+)
+target_link_libraries(test_model_comparison PRIVATE passive_flight_core)
+add_test(NAME model_comparison COMMAND test_model_comparison)
+
 add_dependencies(
         passive_flight_dll_smoke_test
         passive_flight_c_api

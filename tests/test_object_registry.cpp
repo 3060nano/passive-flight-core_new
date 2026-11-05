@@ -7,104 +7,102 @@
 #include <utility>
 
 namespace {
-
-void require(bool condition, const char* message) {
-    if (!condition) {
-        throw std::runtime_error(message);
+    void require(bool condition, const char *message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
     }
-}
 
-void testDefaultRegistry() {
-    const auto registry = passive_flight::makeDefaultObjectRegistry();
-    require(registry.size() == 1, "Default registry size");
-    require(
-        registry.contains("FAB_1500T_POSTNIKOV_1979"),
-        "Default registry must contain FAB-1500T"
-    );
-    require(
-        registry.findObject("FAB_1500T_POSTNIKOV_1979") != nullptr,
-        "FAB-1500T model lookup"
-    );
+    void testDefaultRegistry() {
+        const auto registry = passive_flight::makeDefaultObjectRegistry();
+        require(registry.size() == 2, "Default registry size");
+        require(
+            registry.contains("FAB_1500T_POSTNIKOV_1979"),
+            "Default registry must contain FAB-1500T"
+        );
+        require(
+            registry.findObject("FAB_1500T_POSTNIKOV_1979") != nullptr,
+            "FAB-1500T model lookup"
+        );
 
-    const auto descriptors = registry.descriptors();
-    require(descriptors.size() == 1, "Descriptor count");
-    require(
-        descriptors.front().id == "FAB_1500T_POSTNIKOV_1979",
-        "FAB-1500T must have SimInTech index zero"
-    );
-}
-
-void testAdditionalTabulatedObjectCanBeAdded() {
-    auto registry = passive_flight::makeDefaultObjectRegistry();
-    auto passport = passive_flight::makeFab1500TPostnikovPassport();
-    passport.object.id = "FAB_1500T_RESEARCH_COPY";
-    passport.object.metadata.displayName = "FAB-1500T research copy";
-
-    registry.add(std::move(passport));
-    require(registry.size() == 2, "Additional object count");
-    require(
-        registry.contains("FAB_1500T_RESEARCH_COPY"),
-        "Additional object lookup"
-    );
-}
-
-void testDuplicateIsRejected() {
-    passive_flight::ObjectRegistry registry;
-    registry.add(passive_flight::makeFab1500TPostnikovPassport());
-
-    bool thrown = false;
-    try {
-        registry.add(passive_flight::makeFab1500TPostnikovPassport());
-    } catch (const std::invalid_argument&) {
-        thrown = true;
+        const auto descriptors = registry.descriptors();
+        require(descriptors.size() == 2, "Descriptor count");
+        require(
+            descriptors.front().id == "FAB_1500T_POSTNIKOV_1979",
+            "FAB-1500T must have SimInTech index zero"
+        );
     }
-    require(thrown, "Duplicate identifier must be rejected");
-}
 
-void testInvalidPassportIsRejected() {
-    passive_flight::ObjectRegistry registry;
-    auto passport = passive_flight::makeFab1500TPostnikovPassport();
-    passport.object.mass.massKg = -1.0;
+    void testAdditionalTabulatedObjectCanBeAdded() {
+        auto registry = passive_flight::makeDefaultObjectRegistry();
+        auto passport = passive_flight::makeFab1500TPostnikovPassport();
+        passport.object.id = "FAB_1500T_RESEARCH_COPY";
+        passport.object.metadata.displayName = "FAB-1500T research copy";
 
-    bool thrown = false;
-    try {
         registry.add(std::move(passport));
-    } catch (const std::invalid_argument&) {
-        thrown = true;
+        require(registry.size() == 3, "Additional object count");
+        require(
+            registry.contains("FAB_1500T_RESEARCH_COPY"),
+            "Additional object lookup"
+        );
     }
-    require(thrown, "Invalid passport must be rejected");
-}
 
-void testSimulation() {
-    const auto registry = passive_flight::makeDefaultObjectRegistry();
+    void testDuplicateIsRejected() {
+        passive_flight::ObjectRegistry registry;
+        registry.add(passive_flight::makeFab1500TPostnikovPassport());
 
-    passive_flight::SimulationRequest request;
-    request.objectId = "FAB_1500T_POSTNIKOV_1979";
-    request.release.altitudeM = 100.0;
-    request.release.speedMps = 200.0;
+        bool thrown = false;
+        try {
+            registry.add(passive_flight::makeFab1500TPostnikovPassport());
+        } catch (const std::invalid_argument &) {
+            thrown = true;
+        }
+        require(thrown, "Duplicate identifier must be rejected");
+    }
 
-    passive_flight::SimulationOptions options;
-    options.timeStepS = 0.001;
-    options.maximumTimeS = 30.0;
-    options.maximumSteps = 100'000;
-    options.saveHistory = false;
+    void testInvalidPassportIsRejected() {
+        passive_flight::ObjectRegistry registry;
+        auto passport = passive_flight::makeFab1500TPostnikovPassport();
+        passport.object.mass.massKg = -1.0;
 
-    const auto result = registry.simulate(request, options);
-    require(
-        result.terminationReason ==
+        bool thrown = false;
+        try {
+            registry.add(std::move(passport));
+        } catch (const std::invalid_argument &) {
+            thrown = true;
+        }
+        require(thrown, "Invalid passport must be rejected");
+    }
+
+    void testSimulation() {
+        const auto registry = passive_flight::makeDefaultObjectRegistry();
+
+        passive_flight::SimulationRequest request;
+        request.objectId = "FAB_1500T_POSTNIKOV_1979";
+        request.release.altitudeM = 100.0;
+        request.release.speedMps = 200.0;
+
+        passive_flight::SimulationOptions options;
+        options.timeStepS = 0.001;
+        options.maximumTimeS = 30.0;
+        options.maximumSteps = 100'000;
+        options.saveHistory = false;
+
+        const auto result = registry.simulate(request, options);
+        require(
+            result.terminationReason ==
             passive_flight::TerminationReason::GroundReached,
-        "FAB-1500T simulation must reach ground"
-    );
+            "FAB-1500T simulation must reach ground"
+        );
 
-    request.objectId = "UNKNOWN_OBJECT";
-    const auto unknown = registry.simulate(request, options);
-    require(
-        unknown.terminationReason ==
+        request.objectId = "UNKNOWN_OBJECT";
+        const auto unknown = registry.simulate(request, options);
+        require(
+            unknown.terminationReason ==
             passive_flight::TerminationReason::InvalidInput,
-        "Unknown object must be rejected"
-    );
-}
-
+            "Unknown object must be rejected"
+        );
+    }
 } // namespace
 
 int main() {
@@ -116,7 +114,7 @@ int main() {
         testSimulation();
         std::cout << "All object registry tests passed.\n";
         return EXIT_SUCCESS;
-    } catch (const std::exception& error) {
+    } catch (const std::exception &error) {
         std::cerr << "Test failure: " << error.what() << '\n';
         return EXIT_FAILURE;
     }

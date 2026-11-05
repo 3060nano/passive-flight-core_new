@@ -7,180 +7,186 @@
 #include <utility>
 
 namespace passive_flight {
-namespace {
+    namespace {
+        std::string makeValidationErrorMessage(
+            const ValidationIssues &issues
+        ) {
+            std::string message =
+                    "Object passport validation failed";
 
-std::string makeValidationErrorMessage(
-    const ValidationIssues& issues
-) {
-    std::string message =
-        "Object passport validation failed";
+            for (const ValidationIssue &issue: issues) {
+                message +=
+                        "\n" +
+                        issue.field +
+                        ": " +
+                        issue.message;
+            }
 
-    for (const ValidationIssue& issue : issues) {
-        message +=
-            "\n" +
-            issue.field +
-            ": " +
-            issue.message;
-    }
+            return message;
+        }
+    } // namespace
 
-    return message;
-}
+    void ObjectRegistry::add(
+        ObjectPassport passport
+    ) {
+        const ValidationIssues issues =
+                validate(passport);
 
-} // namespace
+        if (!issues.empty()) {
+            throw std::invalid_argument(
+                makeValidationErrorMessage(
+                    issues
+                )
+            );
+        }
 
-void ObjectRegistry::add(
-    ObjectPassport passport
-) {
-    const ValidationIssues issues =
-        validate(passport);
+        const std::string objectId =
+                passport.object.id;
 
-    if (!issues.empty()) {
-        throw std::invalid_argument(
-            makeValidationErrorMessage(
-                issues
-            )
+        if (contains(objectId)) {
+            throw std::invalid_argument(
+                "Object identifier is already registered: " +
+                objectId
+            );
+        }
+
+        const std::size_t newIndex =
+                passports_.size();
+
+        passports_.push_back(
+            std::move(passport)
+        );
+
+        indexById_.emplace(
+            objectId,
+            newIndex
         );
     }
 
-    const std::string objectId =
-        passport.object.id;
-
-    if (contains(objectId)) {
-        throw std::invalid_argument(
-            "Object identifier is already registered: " +
-            objectId
-        );
+    bool ObjectRegistry::contains(
+        const std::string &objectId
+    ) const noexcept {
+        return
+                indexById_.find(objectId) !=
+                indexById_.end();
     }
 
-    const std::size_t newIndex =
-        passports_.size();
+    const ObjectPassport *
+    ObjectRegistry::findPassport(
+        const std::string &objectId
+    ) const noexcept {
+        const auto iterator =
+                indexById_.find(objectId);
 
-    passports_.push_back(
-        std::move(passport)
-    );
+        if (iterator == indexById_.end()) {
+            return nullptr;
+        }
 
-    indexById_.emplace(
-        objectId,
-        newIndex
-    );
-}
-
-bool ObjectRegistry::contains(
-    const std::string& objectId
-) const noexcept {
-    return
-        indexById_.find(objectId) !=
-        indexById_.end();
-}
-
-const ObjectPassport*
-ObjectRegistry::findPassport(
-    const std::string& objectId
-) const noexcept {
-    const auto iterator =
-        indexById_.find(objectId);
-
-    if (iterator == indexById_.end()) {
-        return nullptr;
+        return &passports_[iterator->second];
     }
 
-    return &passports_[iterator->second];
-}
+    const ObjectModel *
+    ObjectRegistry::findObject(
+        const std::string &objectId
+    ) const noexcept {
+        const ObjectPassport *passport =
+                findPassport(objectId);
 
-const ObjectModel*
-ObjectRegistry::findObject(
-    const std::string& objectId
-) const noexcept {
-    const ObjectPassport* passport =
-        findPassport(objectId);
+        if (passport == nullptr) {
+            return nullptr;
+        }
 
-    if (passport == nullptr) {
-        return nullptr;
+        return &passport->object;
     }
 
-    return &passport->object;
-}
+    std::vector<ObjectDescriptor>
+    ObjectRegistry::descriptors() const {
+        std::vector<ObjectDescriptor> result;
 
-std::vector<ObjectDescriptor>
-ObjectRegistry::descriptors() const {
-    std::vector<ObjectDescriptor> result;
-
-    result.reserve(
-        passports_.size()
-    );
-
-    for (const ObjectPassport& passport :
-         passports_) {
-        ObjectDescriptor descriptor;
-
-        descriptor.id =
-            passport.object.id;
-
-        descriptor.displayName =
-            passport.object.metadata.displayName;
-
-        descriptor.modelVersion =
-            passport.object.metadata.modelVersion;
-
-        result.push_back(
-            std::move(descriptor)
-        );
-    }
-
-    return result;
-}
-
-std::size_t ObjectRegistry::size() const noexcept {
-    return passports_.size();
-}
-
-bool ObjectRegistry::empty() const noexcept {
-    return passports_.empty();
-}
-
-SimulationResult ObjectRegistry::simulate(
-    const SimulationRequest& request,
-    const SimulationOptions& options
-) const {
-    const ObjectModel* object =
-        findObject(
-            request.objectId
+        result.reserve(
+            passports_.size()
         );
 
-    if (object == nullptr) {
-        SimulationResult result;
+        for (const ObjectPassport &passport:
+             passports_) {
+            ObjectDescriptor descriptor;
 
-        result.terminationReason =
-            TerminationReason::InvalidInput;
+            descriptor.id =
+                    passport.object.id;
+
+            descriptor.displayName =
+                    passport.object.metadata.displayName;
+
+            descriptor.modelVersion =
+                    passport.object.metadata.modelVersion;
+
+            result.push_back(
+                std::move(descriptor)
+            );
+        }
 
         return result;
     }
 
-    const ForwardEulerSimulator simulator(
-        *object
-    );
+    std::size_t ObjectRegistry::size() const noexcept {
+        return passports_.size();
+    }
 
-    return simulator.simulate(
-        request,
-        options
-    );
-}
+    bool ObjectRegistry::empty() const noexcept {
+        return passports_.empty();
+    }
 
-ObjectRegistry makeDefaultObjectRegistry() {
-    ObjectRegistry registry;
+    SimulationResult ObjectRegistry::simulate(
+        const SimulationRequest &request,
+        const SimulationOptions &options
+    ) const {
+        const ObjectModel *object =
+                findObject(
+                    request.objectId
+                );
 
-    /*
-     * Единственный штатный объект:
-     * ФАБ-1500Т с готовыми
-     * табличными аэродинамическими
-     * характеристиками по Постникову
-     * и Чуйко, 1979.
-     */
-    registry.add(
-        makeFab1500TPostnikovPassport()
-    );
+        if (object == nullptr) {
+            SimulationResult result;
 
-    return registry;
-}
+            result.terminationReason =
+                    TerminationReason::InvalidInput;
 
+            return result;
+        }
+
+        const ForwardEulerSimulator simulator(
+            *object
+        );
+
+        return simulator.simulate(
+            request,
+            options
+        );
+    }
+
+    ObjectRegistry makeDefaultObjectRegistry() {
+        ObjectRegistry registry;
+
+        /*
+         * Штатный объект (индекс 0):
+         * ФАБ-1500Т с готовыми
+         * табличными аэродинамическими
+         * характеристиками по Постникову
+         * и Чуйко, 1979.
+         */
+        registry.add(
+            makeFab1500TPostnikovPassport()
+        );
+
+        /*
+         * Дополнительный объект (индекс 1):
+         * модифицированные таблицы Cy/mz из новой таблицы
+         * + Cx0 увеличенный на 5%.
+         */
+        registry.add(
+            makeFab1500TModifiedPassport()
+        );
+
+        return registry;
+    }
 } // namespace passive_flight
