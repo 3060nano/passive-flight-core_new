@@ -15,7 +15,7 @@ namespace {
 
     void testDefaultRegistry() {
         const auto registry = passive_flight::makeDefaultObjectRegistry();
-        require(registry.size() == 2, "Default registry size");
+        require(registry.size() == 3, "Default registry size");
         require(
             registry.contains("FAB_1500T_POSTNIKOV_1979"),
             "Default registry must contain FAB-1500T"
@@ -26,7 +26,7 @@ namespace {
         );
 
         const auto descriptors = registry.descriptors();
-        require(descriptors.size() == 2, "Descriptor count");
+        require(descriptors.size() == 3, "Descriptor count");
         require(
             descriptors.front().id == "FAB_1500T_POSTNIKOV_1979",
             "FAB-1500T must have SimInTech index zero"
@@ -40,7 +40,7 @@ namespace {
         passport.object.metadata.displayName = "FAB-1500T research copy";
 
         registry.add(std::move(passport));
-        require(registry.size() == 3, "Additional object count");
+        require(registry.size() == 4, "Additional object count");
         require(
             registry.contains("FAB_1500T_RESEARCH_COPY"),
             "Additional object lookup"

@@ -17,8 +17,18 @@ void requireFinite(double value, const char* name) {
 
 void validateTable(
     const std::vector<MachCoefficientPoint>& table,
-    const char* name
+    const char* name,
+    bool allowEmpty = false
 ) {
+    if (table.empty()) {
+        if (allowEmpty) {
+            return;
+        }
+        throw std::invalid_argument(
+            std::string(name) + " table must contain at least two points"
+        );
+    }
+
     if (table.size() < 2) {
         throw std::invalid_argument(
             std::string(name) + " table must contain at least two points"
@@ -54,6 +64,10 @@ void buildSpline(
     const std::vector<MachCoefficientPoint>& table,
     CubicSpline& spline
 ) {
+    if (table.empty()) {
+        return;
+    }
+
     std::vector<double> mach;
     std::vector<double> values;
     mach.reserve(table.size());
@@ -73,6 +87,10 @@ double interpolate(
     double mach,
     const char* name
 ) {
+    if (table.empty()) {
+        return 0.0;
+    }
+
     if (mach < table.front().mach || mach > table.back().mach) {
         throw std::out_of_range(
             std::string(name) + " table does not cover requested Mach"
@@ -98,13 +116,17 @@ TabulatedAerodynamicModel::TabulatedAerodynamicModel(
 
     validateTable(data_.cx0, "Cx0");
     validateTable(data_.cxAlphaSquared, "CxAlphaSquared");
+    validateTable(data_.cy0, "Cy0", true);
     validateTable(data_.cyAlpha, "CyAlpha");
+    validateTable(data_.mz0, "Mz0", true);
     validateTable(data_.mzAlpha, "MzAlpha");
     validateTable(data_.mzPitchRate, "MzPitchRate");
 
     buildSpline(data_.cx0, cx0Spline_);
     buildSpline(data_.cxAlphaSquared, cxAlphaSquaredSpline_);
+    buildSpline(data_.cy0, cy0Spline_);
     buildSpline(data_.cyAlpha, cyAlphaSpline_);
+    buildSpline(data_.mz0, mz0Spline_);
     buildSpline(data_.mzAlpha, mzAlphaSpline_);
     buildSpline(data_.mzPitchRate, mzPitchRateSpline_);
 }
@@ -133,8 +155,14 @@ AerodynamicCoefficients TabulatedAerodynamicModel::evaluate(
         input.mach,
         "CxAlphaSquared"
     );
+    const double cy0 = interpolate(
+        data_.cy0, cy0Spline_, input.mach, "Cy0"
+    );
     const double cyAlpha = interpolate(
         data_.cyAlpha, cyAlphaSpline_, input.mach, "CyAlpha"
+    );
+    const double mz0 = interpolate(
+        data_.mz0, mz0Spline_, input.mach, "Mz0"
     );
     const double mzAlpha = interpolate(
         data_.mzAlpha, mzAlphaSpline_, input.mach, "MzAlpha"
@@ -148,8 +176,8 @@ AerodynamicCoefficients TabulatedAerodynamicModel::evaluate(
 
     const double alpha = input.angleOfAttackRad;
     const double cxAngleDependent = cxAlphaSquared * alpha * alpha;
-    const double cy = cyAlpha * alpha;
-    const double mzStatic = mzAlpha * alpha;
+    const double cy = cy0 + cyAlpha * alpha;
+    const double mzStatic = mz0 + mzAlpha * alpha;
 
     /*
      * Для таблиц ФАБ-1500Т используется соглашение источника:

@@ -81,6 +81,9 @@ namespace passive_flight {
     [[nodiscard]]
     ObjectPassport makeFab1500TModifiedPassport();
 
+    [[nodiscard]]
+    ObjectPassport makeFab1500TGlidePassport();
+
     /*
      * Ищет параметр по стабильному пути.
      * @param passport Паспорт, в котором выполняется поиск.

@@ -45,4 +45,17 @@ namespace passive_flight {
     [[nodiscard]]
     TabulatedAerodynamicData
     makeFab1500TModifiedAerodynamicData();
+
+    /**
+ * Планирующая модель ФАБ-1500Т с триммированием на 1°.
+ * Производные масштабированы к площади миделя,
+ * добавлены Cy0 и mz0.
+ */
+    [[nodiscard]]
+    ObjectModel makeFab1500TGlideModel();
+
+    [[nodiscard]]
+    TabulatedAerodynamicData
+    makeFab1500TGlideAerodynamicData();
 } // namespace passive_flight
+

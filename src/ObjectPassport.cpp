@@ -525,4 +525,48 @@ namespace passive_flight {
 
         return "unknown";
     }
+     ObjectPassport makeFab1500TGlidePassport() {
+        ObjectPassport passport;
+        passport.object = makeFab1500TGlideModel();
+
+        const ObjectModel &object = passport.object;
+        constexpr const char *source = "lab-work-scaled-plus-trim-1deg";
+
+        addNumber(passport, "mass.massKg", object.mass.massKg, "kg",
+                  ParameterStatus::SourceDocument, source, "Масса ФАБ-1500Т");
+        addNumber(passport, "mass.pitchMomentOfInertiaKgM2",
+                  object.mass.pitchMomentOfInertiaKgM2, "kg*m^2",
+                  ParameterStatus::SourceDocument, source,
+                  "Поперечный момент инерции Jzz");
+        addNumber(passport, "mass.centerOfMassXM", object.mass.centerOfMassXM,
+                  "m", ParameterStatus::SourceDocument, source,
+                  "Координата центра масс от носа");
+        addNumber(passport, "body.lengthM", object.body.lengthM, "m",
+                  ParameterStatus::SourceDocument, source, "Полная длина");
+        addNumber(passport, "body.diameterM", object.body.diameterM, "m",
+                  ParameterStatus::SourceDocument, source, "Диаметр миделя");
+        addNumber(passport, "reference.areaM2", object.reference.areaM2, "m^2",
+                  ParameterStatus::Derived, source, "Площадь миделя");
+        addNumber(passport, "reference.referenceLengthM",
+                  object.reference.referenceLengthM, "m",
+                  ParameterStatus::SourceDocument, source,
+                  "Характерная длина = длина корпуса");
+        addText(passport, "aerodynamics.modelType",
+                aerodynamicModelTypeName(object.aerodynamicModelType),
+                ParameterStatus::Derived, "model-architecture",
+                "Табличная модель с Cy0 и mz0");
+        addText(passport, "aerodynamics.source", source,
+                ParameterStatus::SourceDocument, source,
+                "Масштабированные производные + триммирование 1°");
+        addNumber(passport, "aerodynamics.cy0.pointCount",
+                  static_cast<double>(object.tabulatedAerodynamics.cy0.size()), "1",
+                  ParameterStatus::Derived, source, "Количество узлов Cy0(M)");
+        addNumber(passport, "aerodynamics.mz0.pointCount",
+                  static_cast<double>(object.tabulatedAerodynamics.mz0.size()), "1",
+                  ParameterStatus::Derived, source, "Количество узлов mz0(M)");
+
+        return passport;
+    }
 } // namespace passive_flight
+
+

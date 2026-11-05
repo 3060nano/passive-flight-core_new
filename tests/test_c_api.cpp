@@ -193,8 +193,8 @@ namespace {
 
     void testObjectList() {
         require(
-            pfGetObjectCount() == 2,
-            "C API must expose FAB-1500T and modified variant"
+            pfGetObjectCount() == 3,
+            "C API must expose FAB-1500T, modified and glide variants"
         );
 
         require(

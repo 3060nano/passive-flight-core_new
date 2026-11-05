@@ -187,6 +187,14 @@ namespace passive_flight {
             makeFab1500TModifiedPassport()
         );
 
+        /*
+         * Планирующая модель (индекс 2):
+         * масштабированные производные + Cy0/mz0 для триммирования на 1°.
+         */
+        registry.add(
+            makeFab1500TGlidePassport()
+        );
+
         return registry;
     }
 } // namespace passive_flight
