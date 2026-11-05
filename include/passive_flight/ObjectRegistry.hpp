@@ -21,8 +21,13 @@ namespace passive_flight {
  * - списком выбора объекта.
  */
 struct ObjectDescriptor {
+    /// Стабильный уникальный идентификатор объекта.
     std::string id;
+
+    /// Человекочитаемое название объекта.
     std::string displayName;
+
+    /// Версия числовой модели.
     std::string modelVersion;
 };
 
@@ -35,6 +40,7 @@ struct ObjectDescriptor {
  */
 class ObjectRegistry {
 public:
+    /// Создаёт пустой реестр расчётных объектов.
     ObjectRegistry() = default;
 
     /**
@@ -45,6 +51,7 @@ public:
      * @throws std::invalid_argument:
      * - если паспорт некорректен;
      * - если идентификатор уже зарегистрирован.
+     * @param passport Паспорт, перемещаемый во внутреннее хранилище реестра.
      */
     void add(
         ObjectPassport passport
@@ -52,6 +59,8 @@ public:
 
     /**
      * Проверяет наличие объекта.
+     * @param objectId Стабильный идентификатор искомой модели.
+     * @return `true`, если объект зарегистрирован; иначе `false`.
      */
     [[nodiscard]]
     bool contains(
@@ -62,6 +71,8 @@ public:
      * Возвращает паспорт объекта.
      *
      * Если объект не найден, возвращается nullptr.
+     * @param objectId Стабильный идентификатор искомой модели.
+     * @return Указатель на паспорт либо `nullptr`; указатель действует до изменения реестра.
      */
     [[nodiscard]]
     const ObjectPassport* findPassport(
@@ -72,6 +83,8 @@ public:
      * Возвращает только расчётную модель объекта.
      *
      * Если объект не найден, возвращается nullptr.
+     * @param objectId Стабильный идентификатор искомой модели.
+     * @return Указатель на ObjectModel либо `nullptr`; указатель действует до изменения реестра.
      */
     [[nodiscard]]
     const ObjectModel* findObject(
@@ -81,6 +94,7 @@ public:
     /**
      * Возвращает список доступных объектов
      * в порядке их регистрации.
+     * @return Копия кратких описаний объектов.
      */
     [[nodiscard]]
     std::vector<ObjectDescriptor>
@@ -88,12 +102,14 @@ public:
 
     /**
      * Количество объектов в реестре.
+     * @return Число зарегистрированных паспортов, безразмерный счётчик.
      */
     [[nodiscard]]
     std::size_t size() const noexcept;
 
     /**
      * Проверяет, что реестр пуст.
+     * @return `true`, если в реестре нет объектов; иначе `false`.
      */
     [[nodiscard]]
     bool empty() const noexcept;
@@ -104,6 +120,9 @@ public:
      *
      * Если идентификатор неизвестен, возвращает результат
      * с причиной TerminationReason::InvalidInput.
+     * @param request Идентификатор объекта и условия сброса в СИ.
+     * @param options Настройки интегрирования и сохранения истории.
+     * @return Полный результат расчёта либо результат с признаком ошибки входа.
      */
     [[nodiscard]]
     SimulationResult simulate(
@@ -112,8 +131,10 @@ public:
     ) const;
 
 private:
+    /// Паспорта объектов в порядке их регистрации.
     std::vector<ObjectPassport> passports_;
 
+    /// Соответствие стабильного идентификатора индексу в passports_.
     std::unordered_map<
         std::string,
         std::size_t
@@ -128,6 +149,7 @@ private:
  * FAB_1500T_POSTNIKOV_1979.
  *
  * В дальнейшем сюда будут добавлены новые паспорта.
+ * @return Реестр, содержащий штатную модель ФАБ-1500Т.
  */
 [[nodiscard]]
 ObjectRegistry makeDefaultObjectRegistry();

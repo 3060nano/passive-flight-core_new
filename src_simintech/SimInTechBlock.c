@@ -229,21 +229,33 @@ static ext_var_info_record externalVariables[
  * на каждом шаге SimInTech.
  */
 typedef struct PFSimInTechLocalState {
+    /* Признак наличия сохранённого расчёта для текущего набора входов. */
     int initialized;
 
+    /* Высота сброса последнего расчёта, м. */
     double lastReleaseAltitudeM;
+    /* Скорость сброса последнего расчёта, м/с. */
     double lastReleaseSpeedMps;
+    /* Индекс объекта последнего расчёта, безразмерный. */
     double lastObjectIndex;
 
+    /* Рассчитанная горизонтальная дальность падения, м. */
     double downrangeM;
+    /* Рассчитанное время падения, с. */
     double fallTimeS;
 
+    /* Скорость объекта при падении, м/с. */
     double impactSpeedMps;
+    /* Угол наклона траектории при падении внутри блока, рад. */
     double impactFlightPathAngleRad;
+    /* Угол тангажа при падении внутри блока, рад. */
     double impactPitchAngleRad;
+    /* Угол атаки при падении внутри блока, рад. */
     double impactAngleOfAttackRad;
 
+    /* Причина завершения PFTerminationReason. */
     int32_t terminationReason;
+    /* Код результата PFResultCode последнего обращения к C API. */
     int32_t resultCode;
 } PFSimInTechLocalState;
 

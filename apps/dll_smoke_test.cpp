@@ -119,8 +119,12 @@ const char* defaultLibraryName() {
 
 #endif
 
+/// RAII-обёртка над дескриптором динамической библиотеки для дымового теста C API.
 class DynamicModule {
 public:
+    /// Загружает динамическую библиотеку по указанному системному пути.
+    /// @param path Путь к DLL, SO или dylib в кодировке, принятой платформой.
+    /// @throws std::runtime_error Если модуль невозможно загрузить.
     explicit DynamicModule(
         const std::string& path
     )
@@ -139,18 +143,26 @@ public:
         }
     }
 
+    /// Освобождает системный дескриптор загруженной библиотеки.
     ~DynamicModule() {
         unloadModule(handle_);
     }
 
+    /// Запрещает копирование владельца системного дескриптора.
     DynamicModule(
         const DynamicModule&
     ) = delete;
 
+    /// Запрещает копирующее присваивание владельца системного дескриптора.
     DynamicModule& operator=(
         const DynamicModule&
     ) = delete;
 
+    /// Находит экспортированную функцию и преобразует её адрес к заданному типу.
+    /// @tparam FunctionType Тип указателя на функцию с требуемым соглашением вызова.
+    /// @param functionName ASCII-имя экспортированного символа с завершающим нулём.
+    /// @return Типизированный указатель на экспортированную функцию.
+    /// @throws std::runtime_error Если символ отсутствует в библиотеке.
     template <typename FunctionType>
     [[nodiscard]]
     FunctionType function(
@@ -177,6 +189,7 @@ public:
     }
 
 private:
+    /// Платформенный дескриптор загруженной динамической библиотеки.
     ModuleHandle handle_{};
 };
 
@@ -221,15 +234,23 @@ using CalculateTrajectoryFunction =
         uint64_t*
     );
 
+/// Набор обязательных экспортов основного C API, разрешённых из DLL.
 struct ApiFunctions {
+    /// Функция чтения версии C API.
     GetApiVersionFunction getApiVersion{};
+    /// Функция преобразования PFResultCode в текст.
     GetResultCodeNameFunction getResultCodeName{};
 
+    /// Функция чтения числа зарегистрированных объектов.
     GetObjectCountFunction getObjectCount{};
+    /// Функция чтения стабильного идентификатора объекта.
     GetObjectIdFunction getObjectId{};
+    /// Функция чтения отображаемого имени объекта.
     GetObjectDisplayNameFunction getObjectDisplayName{};
 
+    /// Функция расчёта кратких параметров падения.
     CalculateFunction calculate{};
+    /// Функция расчёта кратких параметров и полной траектории.
     CalculateTrajectoryFunction calculateTrajectory{};
 };
 

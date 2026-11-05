@@ -478,14 +478,20 @@ static ext_var_info_record externalVariables[
     }
 };
 
+/* Локальный кэш временной истории возмущённого движения. */
 typedef struct PFPerturbedTrajectoryLocalState {
+    /* Признак наличия траектории для сохранённого набора входов. */
     int initialized;
 
+    /* Девять последних входов: H0, V0, индекс и шесть компонент Delta x0. */
     double lastValues[9];
 
+    /* Динамический массив совместных точек траектории в единицах C API. */
     PFPerturbedTrajectoryPoint* points;
+    /* Число элементов в массиве points, безразмерный счётчик. */
     uint64_t pointCount;
 
+    /* Код PFResultCode последнего обращения к C API. */
     int32_t resultCode;
 } PFPerturbedTrajectoryLocalState;
 

@@ -17,15 +17,27 @@ namespace passive_flight {
  *     downrangeM = L_f - L_f*.
  */
 struct PerturbedImpactParameterChanges {
+    /// Поправка к моменту достижения поверхности `Delta t_f`, с.
     double fallTimeS{0.0};
 
+    /// Поправка к скорости в событии падения `Delta V_impact`, м/с.
     double speedMps{0.0};
+
+    /// Поправка к углу траектории в событии падения, рад.
     double flightPathAngleRad{0.0};
+
+    /// Поправка к угловой скорости тангажа в событии падения, рад/с.
     double pitchRateRadps{0.0};
+
+    /// Поправка к углу тангажа в событии падения, рад.
     double pitchAngleRad{0.0};
 
+    /// Поправка к горизонтальной дальности падения, м.
     double downrangeM{0.0};
 
+    /// Вычисляет поправку к углу атаки как
+    /// `Delta alpha = Delta theta - Delta Theta`.
+    /// @return Поправка к углу атаки в событии падения, рад.
     [[nodiscard]]
     double angleOfAttackRad() const noexcept {
         return
@@ -58,16 +70,17 @@ struct PerturbedImpactParameterChanges {
  *         Delta y_f + y_dot_f* Delta t_f.
  */
 struct PerturbedImpactAnalysis {
+    /// Признак корректности линейной оценки параметров события падения.
     bool available{false};
 
     /**
      * Вертикальная скорость номинальной
-     * траектории при падении.
+     * траектории при падении `H_dot_f*`, м/с.
      */
     double nominalVerticalSpeedMps{0.0};
 
     /**
-     * Изменения параметров самого события падения.
+     * Изменения параметров самого события падения в единицах СИ.
      */
     PerturbedImpactParameterChanges changes;
 
@@ -77,7 +90,7 @@ struct PerturbedImpactAnalysis {
      *
      * Высота совпадает с высотой поверхности,
      * то есть с высотой конечного состояния
-     * номинальной траектории.
+     * номинальной траектории; остальные компоненты заданы в единицах СИ.
      */
     State estimatedImpactState;
 };
@@ -93,6 +106,16 @@ struct PerturbedImpactAnalysis {
  * Расчёт доступен только если номинальная траектория
  * завершилась по условию GroundReached и
  * H_dot_f* не близка к нулю.
+ *
+ * Реализованы уравнения первого порядка
+ * `Delta t_f = -Delta H_f/H_dot_f*` и
+ * `Delta y_impact = Delta y_f + y_dot_f*Delta t_f`.
+ *
+ * @param result Результат распространения малых возмущений до номинального падения.
+ * @param finalNominalDerivative Правая часть номинальной системы в конечной точке;
+ * компоненты заданы в единицах СИ.
+ * @return Линейная оценка поправок и полного состояния падения; поле available
+ * равно false, если исходные данные не позволяют выполнить оценку.
  */
 [[nodiscard]]
 PerturbedImpactAnalysis analyzePerturbedImpact(

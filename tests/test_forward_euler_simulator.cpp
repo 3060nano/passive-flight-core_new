@@ -38,10 +38,15 @@ void checkNear(
     }
 }
 
+/// Общий набор проверяемого паспорта и связанного с ним решателя.
 struct TestContext {
+    /// Контрольный паспорт ФАБ-1500Т с табличной аэродинамикой.
     passive_flight::ObjectPassport passport;
+
+    /// Решатель траектории, построенный для объекта из passport.
     passive_flight::ForwardEulerSimulator simulator;
 
+    /// Создаёт согласованные паспорт и решатель для каждого тестового сценария.
     TestContext()
         : passport(
               passive_flight::makeFab1500TPostnikovPassport()

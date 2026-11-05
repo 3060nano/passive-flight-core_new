@@ -229,17 +229,26 @@ static ext_var_info_record externalVariables[
     }
 };
 
+/* Локальный кэш траектории одного экземпляра блока SimInTech. */
 typedef struct PFSimInTechTrajectoryLocalState {
+    /* Признак наличия расчёта для сохранённых входных значений. */
     int initialized;
 
+    /* Высота сброса последнего расчёта, м. */
     double lastReleaseAltitudeM;
+    /* Скорость сброса последнего расчёта, м/с. */
     double lastReleaseSpeedMps;
+    /* Индекс объекта последнего расчёта, безразмерный. */
     double lastObjectIndex;
 
+    /* Краткие параметры падения последней траектории в единицах C API. */
     PFSimulationOutput summary;
+    /* Динамический массив точек траектории во внутренних единицах СИ. */
     PFTrajectoryPoint* points;
+    /* Число элементов в массиве points, безразмерный счётчик. */
     uint64_t pointCount;
 
+    /* Код PFResultCode последнего обращения к C API. */
     int32_t resultCode;
 } PFSimInTechTrajectoryLocalState;
 

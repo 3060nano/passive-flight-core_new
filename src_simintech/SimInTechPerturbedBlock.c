@@ -408,21 +408,34 @@ static ext_var_info_record externalVariables[
     }
 };
 
+/* Локальный кэш терминального расчёта возмущённого движения. */
 typedef struct PFPerturbedSimInTechLocalState {
+    /* Признак наличия расчёта для сохранённого набора входов. */
     int initialized;
 
+    /* Высота сброса последнего расчёта, м. */
     double lastReleaseAltitudeM;
+    /* Скорость сброса последнего расчёта, м/с. */
     double lastReleaseSpeedMps;
+    /* Индекс объекта последнего расчёта, безразмерный. */
     double lastObjectIndex;
 
+    /* Начальное отклонение скорости последнего расчёта, м/с. */
     double lastDeltaSpeedMps;
+    /* Начальное отклонение угла траектории, рад. */
     double lastDeltaPathAngleRad;
+    /* Начальное отклонение угловой скорости тангажа, рад/с. */
     double lastDeltaPitchRateRadps;
+    /* Начальное отклонение угла тангажа, рад. */
     double lastDeltaPitchAngleRad;
+    /* Начальное отклонение горизонтальной координаты, м. */
     double lastDeltaDownrangeM;
+    /* Начальное отклонение геометрической высоты, м. */
     double lastDeltaAltitudeM;
 
+    /* Результат терминальной поправки в единицах C API. */
     PFPerturbedImpactOutput output;
+    /* Код PFResultCode последнего обращения к C API. */
     int32_t resultCode;
 } PFPerturbedSimInTechLocalState;
 

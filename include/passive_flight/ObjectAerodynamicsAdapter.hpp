@@ -7,7 +7,10 @@
 
 namespace passive_flight {
 
-/// Создаёт табличную аэродинамическую модель из числового паспорта объекта.
+/// Создаёт полиморфную аэродинамическую модель из числового паспорта объекта.
+/// @param object Валидированная модель с опорной длиной в метрах и таблицами.
+/// @return Разделяемый неизменяемый объект AerodynamicModel.
+/// @throws std::invalid_argument Если тип аэродинамики не поддерживается.
 [[nodiscard]]
 std::shared_ptr<const AerodynamicModel>
 makeAerodynamicModel(

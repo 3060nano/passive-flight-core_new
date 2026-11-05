@@ -188,8 +188,12 @@ passive_flight::State interpolateGroundImpact(
     return impact;
 }
 
+/// Результат независимого нелинейного интегрирования до поверхности.
 struct NonlinearImpactResult {
+    /// Признак успешного достижения поверхности корректным состоянием.
     bool available{false};
+
+    /// Интерполированное состояние падения в единицах СИ.
     passive_flight::State impactState;
 };
 
@@ -303,16 +307,25 @@ NonlinearImpactResult simulateNonlinearImpact(
     }
 }
 
+/// Фактические разности параметров двух нелинейных событий падения.
 struct ActualImpactChanges {
+    /// Разность времени падения, с.
     double fallTimeS{};
 
+    /// Разность скорости при падении, м/с.
     double speedMps{};
+    /// Разность углов наклона траектории при падении, рад.
     double flightPathAngleRad{};
+    /// Разность угловых скоростей тангажа при падении, рад/с.
     double pitchRateRadps{};
+    /// Разность углов тангажа при падении, рад.
     double pitchAngleRad{};
 
+    /// Разность горизонтальных дальностей падения, м.
     double downrangeM{};
 
+    /// Вычисляет разность углов атаки как `Delta theta - Delta Theta`.
+    /// @return Разность углов атаки, рад.
     [[nodiscard]]
     double angleOfAttackRad() const noexcept {
         return
@@ -421,23 +434,31 @@ double normalizedImpactError(
     );
 }
 
+/// Полный результат одного масштаба валидации терминальной поправки.
 struct ImpactValidationResult {
+    /// Признак наличия обоих корректных событий падения.
     bool available{false};
 
+    /// Безразмерный множитель базового начального возмущения.
     double perturbationScale{};
 
+    /// Измеренные разности двух нелинейных расчётов в единицах СИ.
     ActualImpactChanges actualChanges;
 
+    /// Линейно предсказанные изменения параметров падения в единицах СИ.
     passive_flight::
         PerturbedImpactParameterChanges
             predictedChanges;
 
+    /// Состояние падения возмущённой нелинейной траектории в единицах СИ.
     passive_flight::State
         actualPerturbedImpactState;
 
+    /// Состояние падения, предсказанное линейной поправкой, в единицах СИ.
     passive_flight::State
         predictedPerturbedImpactState;
 
+    /// Безразмерная нормированная ошибка параметров события падения.
     double normalizedError{};
 };
 
