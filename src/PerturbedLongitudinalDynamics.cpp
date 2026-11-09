@@ -10,14 +10,23 @@
 namespace passive_flight {
 namespace {
 
+/// Внутреннее индексируемое представление правой части номинальной системы;
+/// единицы каждой компоненты соответствуют StateDerivative.
 using DerivativeVector = LongitudinalStateVector;
 
+/// Возвращает целочисленный индекс компоненты продольного состояния.
+/// @param index Типизированный индекс компоненты.
+/// @return Позиция от 0 до `kLongitudinalStateDimension - 1`.
 constexpr std::size_t indexOf(
     LongitudinalStateIndex index
 ) noexcept {
     return static_cast<std::size_t>(index);
 }
 
+/// Требует положительного конечного шага численного дифференцирования.
+/// @param value Шаг в единицах соответствующей компоненты состояния.
+/// @param name Диагностическое имя шага.
+/// @throws std::invalid_argument Если value не конечно или не положительно.
 void requirePositiveFinite(
     double value,
     const char* name
@@ -30,6 +39,10 @@ void requirePositiveFinite(
     }
 }
 
+/// Проверяет все шаги конечных разностей для построения матрицы Якоби.
+/// @param options Шаги по скорости, углам, угловой скорости и координатам
+/// в соответствующих единицах СИ.
+/// @throws std::invalid_argument Если хотя бы один шаг некорректен.
 void validateOptions(
     const PerturbationLinearizationOptions& options
 ) {
@@ -59,6 +72,9 @@ void validateOptions(
     );
 }
 
+/// Проверяет конечность компонент вектора малых возмущений.
+/// @param perturbation Отклонения скорости, углов и координат в СИ.
+/// @throws std::invalid_argument Если хотя бы одна компонента не конечна.
 void validatePerturbation(
     const LongitudinalPerturbationState& perturbation
 ) {
@@ -81,6 +97,9 @@ void validatePerturbation(
     }
 }
 
+/// Преобразует правую часть номинальной системы в индексируемый вектор.
+/// @param derivative Производные состояния в покомпонентных единицах СИ.
+/// @return Вектор `[dV/dt, dTheta/dt, domega_z/dt, dtheta/dt, dx/dt, dH/dt]`.
 DerivativeVector toVector(
     const StateDerivative& derivative
 ) {
@@ -94,6 +113,9 @@ DerivativeVector toVector(
     };
 }
 
+/// Преобразует структуру малых возмущений в индексируемый вектор.
+/// @param perturbation Компоненты `Delta x` в единицах СИ.
+/// @return Вектор в порядке `V, Theta, omega_z, theta, x, H`.
 LongitudinalStateVector toVector(
     const LongitudinalPerturbationState& perturbation
 ) {
@@ -107,6 +129,9 @@ LongitudinalStateVector toVector(
     };
 }
 
+/// Преобразует индексируемый вектор в структуру производных возмущения.
+/// @param values Производные в порядке `V, Theta, omega_z, theta, x, H`.
+/// @return Структура с покомпонентными единицами производных СИ.
 LongitudinalPerturbationDerivative toDerivative(
     const LongitudinalStateVector& values
 ) {
@@ -122,6 +147,10 @@ LongitudinalPerturbationDerivative toDerivative(
     };
 }
 
+/// Прибавляет размерное приращение к выбранной компоненте состояния.
+/// @param state Изменяемое номинальное состояние в единицах СИ.
+/// @param index Компонента, к которой применяется приращение.
+/// @param increment Приращение в единицах выбранной компоненты.
 void addStateIncrement(
     State& state,
     LongitudinalStateIndex index,
@@ -149,6 +178,10 @@ void addStateIncrement(
     }
 }
 
+/// Выбирает шаг конечной разности для заданной компоненты состояния.
+/// @param options Настройки шагов в единицах СИ.
+/// @param index Компонента вектора `V, Theta, omega_z, theta, x, H`.
+/// @return Положительный шаг в единицах выбранной компоненты.
 double differentiationStep(
     const PerturbationLinearizationOptions& options,
     LongitudinalStateIndex index
@@ -172,6 +205,11 @@ double differentiationStep(
     );
 }
 
+/// Пытается вычислить правую часть номинальной системы без распространения
+/// исключения за пределы алгоритма выбора разностной схемы.
+/// @param dynamics Нелинейная модель продольного движения.
+/// @param state Точка вычисления в единицах СИ.
+/// @return Вектор производных либо `std::nullopt` вне области определения.
 std::optional<DerivativeVector> tryEvaluate(
     const NominalLongitudinalDynamics& dynamics,
     const State& state
@@ -185,6 +223,12 @@ std::optional<DerivativeVector> tryEvaluate(
     }
 }
 
+/// Записывает столбец матрицы Якоби как отношение разности производных
+/// к размерному приращению выбранной компоненты состояния.
+/// @param matrix Изменяемая матрица `A = df/dx`.
+/// @param column Индекс заполняемого столбца.
+/// @param numerator Вектор разностей правой части.
+/// @param denominator Приращение состояния в единицах компоненты столбца.
 void fillMatrixColumn(
     LongitudinalSystemMatrix& matrix,
     std::size_t column,
@@ -199,6 +243,10 @@ void fillMatrixColumn(
     }
 }
 
+/// Вычисляет покомпонентную разность двух векторов правой части.
+/// @param first Уменьшаемый вектор производных в единицах СИ.
+/// @param second Вычитаемый вектор в тех же покомпонентных единицах.
+/// @return Вектор `first - second`.
 DerivativeVector subtract(
     const DerivativeVector& first,
     const DerivativeVector& second

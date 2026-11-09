@@ -11,6 +11,8 @@
 
 namespace {
 
+/// Возвращает единый неизменяемый реестр объектов, обслуживаемый C API.
+/// @return Ссылка на реестр, существующий до завершения процесса.
 const passive_flight::ObjectRegistry& registry() {
     static const passive_flight::ObjectRegistry instance =
         passive_flight::makeDefaultObjectRegistry();
@@ -18,6 +20,9 @@ const passive_flight::ObjectRegistry& registry() {
     return instance;
 }
 
+/// Преобразует внутреннюю причину остановки в стабильное значение C ABI.
+/// @param reason Причина завершения C++-решателя.
+/// @return Соответствующая константа PFTerminationReason.
 int32_t mapTerminationReason(
     passive_flight::TerminationReason reason
 ) {
@@ -41,6 +46,10 @@ int32_t mapTerminationReason(
     return PF_TERMINATION_INVALID_STATE;
 }
 
+/// Устанавливает безопасные начальные значения краткого результата C API.
+/// Расстояния, время, скорости и углы обнуляются; причина устанавливается
+/// в PF_TERMINATION_INVALID_INPUT.
+/// @param output Изменяемая структура результата в единицах СИ.
 void clearOutput(
     PFSimulationOutput& output
 ) {
@@ -56,6 +65,9 @@ void clearOutput(
         PF_TERMINATION_INVALID_INPUT;
 }
 
+/// Переносит краткий результат C++-модели в структуру стабильного C ABI.
+/// @param result Результат моделирования в единицах СИ.
+/// @param output Заполняемая структура C API с углами в радианах.
 void fillOutput(
     const passive_flight::SimulationResult& result,
     PFSimulationOutput& output
@@ -87,6 +99,9 @@ void fillOutput(
         );
 }
 
+/// Преобразует вход C API в запрос объектного реестра.
+/// @param input Идентификатор, высота сброса в м и скорость в м/с.
+/// @return Запрос SimulationRequest в единицах СИ.
 passive_flight::SimulationRequest makeRequest(
     const PFSimulationInput& input
 ) {
@@ -104,6 +119,11 @@ passive_flight::SimulationRequest makeRequest(
     return request;
 }
 
+/// Формирует структуру входа C API из скалярных аргументов SimInTech.
+/// @param objectId Нуль-терминированный идентификатор UTF-8.
+/// @param releaseAltitudeM Геометрическая высота сброса, м.
+/// @param releaseSpeedMps Модуль скорости сброса, м/с.
+/// @return Структура PFSimulationInput без владения строкой objectId.
 PFSimulationInput makeCInput(
     const char* objectId,
     double releaseAltitudeM,
@@ -123,6 +143,9 @@ PFSimulationInput makeCInput(
     return input;
 }
 
+/// Проверяет обязательные поля входа C API до обращения к C++-ядру.
+/// @param input Идентификатор и условия горизонтального сброса в СИ.
+/// @return `true`, если строка задана, а высота и скорость конечны и положительны.
 bool isValidInput(
     const PFSimulationInput& input
 ) {
@@ -137,6 +160,8 @@ bool isValidInput(
         input.releaseSpeedMps > 0.0;
 }
 
+/// Формирует настройки расчёта кратких параметров падения.
+/// @return Шаг 0,001 с, предел 300 с и отключённая история траектории.
 passive_flight::SimulationOptions
 makeSummaryOptions() {
     passive_flight::SimulationOptions options;
@@ -153,6 +178,8 @@ makeSummaryOptions() {
     return options;
 }
 
+/// Формирует настройки расчёта траектории, сохраняемой с интервалом 0,1 с.
+/// @return Настройки явного интегрирования и прореживания истории.
 passive_flight::SimulationOptions
 makeTrajectoryOptions() {
     passive_flight::SimulationOptions options =
@@ -170,6 +197,12 @@ makeTrajectoryOptions() {
     return options;
 }
 
+/// Копирует строку UTF-8 в буфер двухпроходного C-интерфейса.
+/// @param value Исходная строка без завершающего нуля в размере std::string.
+/// @param buffer Выходной буфер либо NULL при запросе размера.
+/// @param bufferSize Ёмкость буфера, байт.
+/// @param requiredSize Обязательный выход требуемого размера, байт.
+/// @return PF_RESULT_OK либо код ошибки указателя или размера буфера.
 int32_t copyStringToBuffer(
     const std::string& value,
     char* buffer,
@@ -204,6 +237,9 @@ int32_t copyStringToBuffer(
     return PF_RESULT_OK;
 }
 
+/// Преобразует точку внутренней истории в структуру траектории C ABI.
+/// @param sample Состояние, нагрузки и коэффициенты в единицах СИ.
+/// @return Точка PFTrajectoryPoint с углами в радианах.
 PFTrajectoryPoint makeTrajectoryPoint(
     const passive_flight::TrajectorySample& sample
 ) {
@@ -251,6 +287,9 @@ PFTrajectoryPoint makeTrajectoryPoint(
     return point;
 }
 
+/// Проверяет наличие выбранного идентификатора в штатном реестре.
+/// @param input Вход C API с корректной нуль-терминированной строкой objectId.
+/// @return PF_RESULT_OK либо PF_RESULT_OBJECT_NOT_FOUND.
 int32_t validateObjectExistence(
     const PFSimulationInput& input
 ) {
@@ -263,6 +302,8 @@ int32_t validateObjectExistence(
     return PF_RESULT_OK;
 }
 
+/// Проверяет наличие всех обязательных выходных указателей скалярного адаптера.
+/// @return `true`, если ни один выходной указатель не равен NULL.
 bool hasAllSimInTechSummaryOutputs(
     double* downrangeM,
     double* fallTimeS,
@@ -282,6 +323,8 @@ bool hasAllSimInTechSummaryOutputs(
         terminationReason != nullptr;
 }
 
+/// Инициализирует скалярные выходы SimInTech безопасными значениями.
+/// Расстояния заданы в м, время в с, скорость в м/с, углы в рад.
 void clearSimInTechSummaryOutputs(
     double& downrangeM,
     double& fallTimeS,
@@ -303,6 +346,9 @@ void clearSimInTechSummaryOutputs(
         PF_TERMINATION_INVALID_INPUT;
 }
 
+/// Копирует структуру C API в скалярные выходы адаптера SimInTech.
+/// @param source Краткий результат с величинами в единицах СИ.
+/// Остальные ссылочные параметры получают соответствующие поля source.
 void copySimInTechSummaryOutputs(
     const PFSimulationOutput& source,
     double& downrangeM,

@@ -7,12 +7,14 @@
 #include <utility>
 
 namespace {
+    /// Требует выполнения логического условия теста реестра.
     void require(bool condition, const char *message) {
         if (!condition) {
             throw std::runtime_error(message);
         }
     }
 
+    /// Проверяет состав и поиск объектов стандартного реестра.
     void testDefaultRegistry() {
         const auto registry = passive_flight::makeDefaultObjectRegistry();
         require(registry.size() == 3, "Default registry size");
@@ -33,6 +35,7 @@ namespace {
         );
     }
 
+    /// Проверяет добавление дополнительного корректного табличного объекта.
     void testAdditionalTabulatedObjectCanBeAdded() {
         auto registry = passive_flight::makeDefaultObjectRegistry();
         auto passport = passive_flight::makeFab1500TPostnikovPassport();
@@ -47,6 +50,7 @@ namespace {
         );
     }
 
+    /// Проверяет запрет повторной регистрации одного идентификатора.
     void testDuplicateIsRejected() {
         passive_flight::ObjectRegistry registry;
         registry.add(passive_flight::makeFab1500TPostnikovPassport());
@@ -60,6 +64,7 @@ namespace {
         require(thrown, "Duplicate identifier must be rejected");
     }
 
+    /// Проверяет отклонение паспорта с некорректными физическими параметрами.
     void testInvalidPassportIsRejected() {
         passive_flight::ObjectRegistry registry;
         auto passport = passive_flight::makeFab1500TPostnikovPassport();
@@ -74,6 +79,7 @@ namespace {
         require(thrown, "Invalid passport must be rejected");
     }
 
+    /// Проверяет запуск решателя по идентификатору из реестра.
     void testSimulation() {
         const auto registry = passive_flight::makeDefaultObjectRegistry();
 
@@ -105,6 +111,7 @@ namespace {
     }
 } // namespace
 
+/// Запускает модульные проверки ObjectRegistry.
 int main() {
     try {
         testDefaultRegistry();

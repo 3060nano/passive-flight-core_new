@@ -51,7 +51,8 @@ enum {
 };
 
 /*
- * Значения выходов по умолчанию.
+ * Начальные значения выходов: расстояние — м, время — с, скорость — м/с,
+ * углы внутри блока — рад; коды причин и результатов безразмерны.
  */
 static double defaultDownrangeM =
     0.0;
@@ -78,7 +79,8 @@ static double defaultResultCode =
     (double) PF_RESULT_INVALID_INPUT;
 
 /*
- * Значения входов по умолчанию.
+ * Начальные значения входов: высота — м, скорость — м/с,
+ * индекс объекта — безразмерный номер в ObjectRegistry.
  */
 static double defaultReleaseAltitudeM =
     1000.0;
@@ -92,9 +94,7 @@ static double defaultObjectIndex =
 /*
  * Таблица внешних переменных.
  *
- * ВАЖНО:
- *
- * Имена записей должны иметь вид input:N и out:N.
+ * По контракту загрузчика имена записей должны иметь вид input:N и out:N.
  */
 static ext_var_info_record externalVariables[
     PF_SIT_EXTERNAL_VARIABLE_COUNT
@@ -259,11 +259,18 @@ typedef struct PFSimInTechLocalState {
     int32_t resultCode;
 } PFSimInTechLocalState;
 
+/* Служебное описание задачи, заполняемое исполнительной средой SimInTech. */
 static TTaskInfoStruct taskInfo;
 
+/* Стабильный 32-битный идентификатор схемы скалярного блока. */
 static const unsigned int schemeHash32 =
     0x50465335U;
 
+/*
+ * Возвращает адрес внешней скалярной переменной SimInTech.
+ * extVarsAddress — массив адресов портов; index — безразмерный индекс порта.
+ * Возвращает адрес double либо NULL при отсутствии массива адресов.
+ */
 static double* externalDouble(
     void** extVarsAddress,
     int index
@@ -275,6 +282,11 @@ static double* externalDouble(
     return (double*) extVarsAddress[index];
 }
 
+/*
+ * Записывает скалярное значение во внешний порт при наличии его адреса.
+ * extVarsAddress — массив адресов; index — индекс порта; value задаётся
+ * в единицах, определённых таблицей externalVariables.
+ */
 static void writeExternalDouble(
     void** extVarsAddress,
     int index,
@@ -291,6 +303,11 @@ static void writeExternalDouble(
     }
 }
 
+/*
+ * Проверяет доступность всех входных и выходных портов блока.
+ * Принимает массив адресов extVarsAddress и возвращает 1 при наличии
+ * каждого порта либо 0 при обнаружении NULL.
+ */
 static int allExternalVariablesAreAvailable(
     void** extVarsAddress
 ) {
@@ -311,6 +328,10 @@ static int allExternalVariablesAreAvailable(
     return 1;
 }
 
+/*
+ * Сбрасывает кэшированный физический результат в безопасное состояние.
+ * localState получает нулевые величины в СИ и коды некорректного входа.
+ */
 static void clearLocalResult(
     PFSimInTechLocalState* localState
 ) {
@@ -333,6 +354,11 @@ static void clearLocalResult(
         PF_RESULT_INVALID_INPUT;
 }
 
+/*
+ * Передаёт кэшированный результат на выходные порты SimInTech.
+ * Расстояние записывается в м, время в с, скорость в м/с; углы
+ * преобразуются из радиан в градусы на границе блока.
+ */
 static void writeLocalResultToPorts(
     void** extVarsAddress,
     const PFSimInTechLocalState* localState
@@ -398,6 +424,11 @@ static void writeLocalResultToPorts(
     );
 }
 
+/*
+ * Преобразует вещественный индекс порта выбора объекта в идентификатор UTF-8.
+ * objectIndexValue должен задавать неотрицательное целое; objectIdCapacity
+ * измеряется в байтах. Возвращает PFResultCode.
+ */
 static int objectIndexToId(
     double objectIndexValue,
     char* objectId,
@@ -439,6 +470,11 @@ static int objectIndexToId(
     );
 }
 
+/*
+ * Сравнивает текущие входы с набором, для которого сохранён результат.
+ * Высота задана в м, скорость в м/с, индекс объекта безразмерен.
+ * Возвращает 1 при необходимости повторного расчёта, иначе 0.
+ */
 static int inputsHaveChanged(
     const PFSimInTechLocalState* localState,
     double releaseAltitudeM,
@@ -459,6 +495,11 @@ static int inputsHaveChanged(
             objectIndex;
 }
 
+/*
+ * Выполняет расчёт только при первом вызове или изменении входных данных.
+ * Читает условия сброса из extVarsAddress, обновляет localState и сохраняет
+ * краткий результат C API в единицах СИ.
+ */
 static void calculateIfNecessary(
     void** extVarsAddress,
     PFSimInTechLocalState* localState

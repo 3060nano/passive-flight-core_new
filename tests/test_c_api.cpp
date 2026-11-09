@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace {
+    /// Требует выполнения логического условия теста C API.
     void require(
         bool condition,
         const std::string &message
@@ -17,6 +18,7 @@ namespace {
         }
     }
 
+    /// Проверяет абсолютное отклонение величин в одинаковых единицах.
     void requireNear(
         double actual,
         double expected,
@@ -34,6 +36,9 @@ namespace {
         }
     }
 
+    /// Читает стабильный идентификатор объекта двухпроходным вызовом C API.
+    /// @param index Безразмерный индекс объекта.
+    /// @return Строка UTF-8 с идентификатором.
     std::string getObjectId(
         uint64_t objectIndex
     ) {
@@ -82,6 +87,9 @@ namespace {
         );
     }
 
+    /// Читает отображаемое имя объекта двухпроходным вызовом C API.
+    /// @param index Безразмерный индекс объекта.
+    /// @return Строка UTF-8 с пользовательским названием.
     std::string getObjectDisplayName(
         uint64_t objectIndex
     ) {
@@ -125,6 +133,8 @@ namespace {
         );
     }
 
+    /// Формирует штатный вход расчёта для первого объекта реестра.
+    /// @return Условия горизонтального сброса в единицах СИ.
     PFSimulationInput makeInput() {
         PFSimulationInput input{};
 
@@ -140,6 +150,8 @@ namespace {
         return input;
     }
 
+    /// Формирует вход расчёта для контрольной модели ФАБ-1500Т.
+    /// @return Идентификатор модели и условия сброса в единицах СИ.
     PFSimulationInput makeFab1500TInput() {
         PFSimulationInput input{};
 
@@ -155,6 +167,7 @@ namespace {
         return input;
     }
 
+    /// Проверяет непустую строку версии основного C API.
     void testApiVersion() {
         const char *version =
                 pfGetApiVersion();
@@ -171,6 +184,7 @@ namespace {
         );
     }
 
+    /// Проверяет стабильные текстовые представления кодов PFResultCode.
     void testResultCodeNames() {
         require(
             std::string(
@@ -191,6 +205,7 @@ namespace {
         );
     }
 
+    /// Проверяет число объектов и двухпроходное чтение их строковых свойств.
     void testObjectList() {
         require(
             pfGetObjectCount() == 3,
@@ -225,6 +240,7 @@ namespace {
         );
     }
 
+    /// Проверяет краткий расчёт для штатного объекта реестра.
     void testSummaryCalculation() {
         const PFSimulationInput input =
                 makeInput();
@@ -269,6 +285,7 @@ namespace {
         );
     }
 
+    /// Проверяет физическую корректность краткого расчёта ФАБ-1500Т.
     void testFab1500TSummaryCalculation() {
         const PFSimulationInput input =
                 makeFab1500TInput();
@@ -322,6 +339,7 @@ namespace {
         );
     }
 
+    /// Проверяет код PF_RESULT_OBJECT_NOT_FOUND для неизвестной модели.
     void testUnknownObject() {
         PFSimulationInput input =
                 makeInput();
@@ -344,6 +362,7 @@ namespace {
         );
     }
 
+    /// Проверяет отклонение нулевых указателей и нефизичных условий сброса.
     void testInvalidInput() {
         PFSimulationOutput output{};
 
@@ -369,6 +388,7 @@ namespace {
         );
     }
 
+    /// Проверяет двухпроходное получение траектории и согласованность итогов.
     void testTrajectoryCalculation() {
         const PFSimulationInput input =
                 makeInput();
@@ -470,6 +490,7 @@ namespace {
         );
     }
 
+    /// Проверяет начальную и конечную точки траектории ФАБ-1500Т.
     void testFab1500TTrajectoryCalculation() {
         const PFSimulationInput input =
                 makeFab1500TInput();
@@ -557,6 +578,7 @@ namespace {
         );
     }
 
+    /// Проверяет скалярный адаптер краткого результата для SimInTech.
     void testSimInTechSummaryAdapter() {
         const PFSimulationInput input =
                 makeInput();
@@ -654,6 +676,7 @@ namespace {
         );
     }
 
+    /// Сверяет скалярный адаптер SimInTech с прямым расчётом ФАБ-1500Т.
     void testFab1500TSimInTechSummaryAdapter() {
         const PFSimulationInput input =
                 makeFab1500TInput();
@@ -750,6 +773,7 @@ namespace {
         );
     }
 
+    /// Проверяет обработку некорректных выходных указателей адаптера SimInTech.
     void testSimInTechSummaryValidation() {
         double downrangeM = 0.0;
         double fallTimeS = 0.0;
@@ -823,6 +847,7 @@ namespace {
         );
     }
 
+    /// Проверяет двухпроходное получение массивов траектории для SimInTech.
     void testSimInTechTrajectoryAdapter() {
         const PFSimulationInput input =
                 makeInput();
@@ -956,6 +981,7 @@ namespace {
         }
     }
 
+    /// Проверяет контракт указателей и ёмкости траекторного адаптера SimInTech.
     void testSimInTechTrajectoryValidation() {
         uint64_t requiredPointCount = 0;
         uint64_t writtenPointCount = 0;
@@ -1002,6 +1028,7 @@ namespace {
     }
 } // namespace
 
+/// Запускает полный набор проверок основного C API и адаптеров SimInTech.
 int main() {
     try {
         testApiVersion();

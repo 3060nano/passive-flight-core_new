@@ -12,11 +12,14 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Коэффициент перевода углов из градусов в радианы, рад/град.
 constexpr double kDegreesToRadians =
     std::numbers::pi_v<double> / 180.0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -31,6 +34,7 @@ void check(
     }
 }
 
+/// Проверяет конечность времени и всех компонент состояния.
 bool isFinite(
     const passive_flight::State& state
 ) {
@@ -49,8 +53,13 @@ bool isFinite(
  * тем же явным методом Эйлера, который используется
  * в основном ForwardEulerSimulator.
  *
- * Этот код находится только в тесте.
- * Production API ради верификации не расширяем.
+ * Локальная реализация используется как независимый инструмент верификации
+ * и не расширяет публичный интерфейс решателя.
+ *
+ * @param current Состояние в начале шага в единицах СИ.
+ * @param derivative Правая часть нелинейной системы.
+ * @param timeStepS Шаг интегрирования, с.
+ * @return Состояние после одного шага в единицах СИ.
  */
 passive_flight::State makeEulerStep(
     const passive_flight::State& current,
@@ -89,6 +98,8 @@ passive_flight::State makeEulerStep(
     return next;
 }
 
+/// Вычисляет линейную интерполяцию `y = y0 + lambda*(y1-y0)`.
+/// Аргументы first и second имеют одинаковые единицы, lambda безразмерен.
 double interpolateValue(
     double first,
     double second,
@@ -109,6 +120,11 @@ double interpolateValue(
  * если один узел находится выше поверхности,
  * а следующий ниже, определяем точку пересечения
  * поверхности между ними.
+ *
+ * @param aboveGround Состояние над поверхностью в единицах СИ.
+ * @param belowGround Состояние под поверхностью в единицах СИ.
+ * @param groundAltitudeM Высота поверхности, м.
+ * @return Интерполированное состояние события падения.
  */
 passive_flight::State interpolateGroundImpact(
     const passive_flight::State& aboveGround,
@@ -198,14 +214,16 @@ struct NonlinearImpactResult {
 };
 
 /*
- * Интегрирует ПОЛНУЮ нелинейную модель
- * из произвольного начального состояния
- * непосредственно до достижения поверхности.
+ * Интегрирует исходную нелинейную модель из произвольного начального
+ * состояния непосредственно до достижения поверхности.
  *
- * Это эталон для текущего теста.
+ * Полученный результат используется как независимое контрольное значение:
+ * вариационные уравнения в данном расчёте не применяются.
  *
- * Важно:
- * здесь не используется система малых возмущений.
+ * @param dynamics Нелинейная правая часть номинального движения.
+ * @param initialState Произвольное начальное состояние в единицах СИ.
+ * @param options Шаг, пределы и высота поверхности в единицах СИ.
+ * @return Признак доступности и интерполированное состояние падения.
  */
 NonlinearImpactResult simulateNonlinearImpact(
     const passive_flight::NominalLongitudinalDynamics& dynamics,
@@ -334,6 +352,10 @@ struct ActualImpactChanges {
     }
 };
 
+/// Вычисляет фактические разности параметров двух событий падения.
+/// @param nominalImpact Номинальное состояние падения в единицах СИ.
+/// @param perturbedImpact Возмущённое состояние падения в единицах СИ.
+/// @return Разности «возмущённое минус номинальное».
 ActualImpactChanges makeActualImpactChanges(
     const passive_flight::State& nominalImpact,
     const passive_flight::State& perturbedImpact
@@ -374,6 +396,10 @@ ActualImpactChanges makeActualImpactChanges(
  * разных размерностей в один показатель.
  *
  * Она не является частью физической модели.
+ *
+ * @param actual Разности двух нелинейных событий падения.
+ * @param predicted Линейно предсказанные поправки первого порядка.
+ * @return Безразмерная евклидова норма нормированных ошибок.
  */
 double normalizedImpactError(
     const ActualImpactChanges& actual,
@@ -462,6 +488,9 @@ struct ImpactValidationResult {
     double normalizedError{};
 };
 
+/// Выполняет независимое линейное и нелинейное моделирование одного масштаба.
+/// @param perturbationScale Безразмерный множитель базового Delta x0.
+/// @return Результат сравнения терминальных состояний и нормированная ошибка.
 ImpactValidationResult runImpactValidation(
     double perturbationScale
 ) {
@@ -676,6 +705,7 @@ ImpactValidationResult runImpactValidation(
     return validation;
 }
 
+/// Печатает предсказанные и фактические терминальные поправки с единицами.
 void printValidation(
     const ImpactValidationResult& result
 ) {
@@ -734,7 +764,7 @@ void printValidation(
 }
 
 /*
- * Главная проверка:
+ * Критерий валидации:
  *
  * PerturbedImpactAnalysis является первым
  * приближением отображения:
@@ -838,7 +868,7 @@ void testImpactPredictionConvergesToNonlinearImpact() {
      *
      * - численное определение события H = 0;
      * - интерполяция точки пересечения земли;
-     * - first-order event-time correction.
+     * - поправка первого порядка к моменту события.
      */
     check(
         scaleHalf.normalizedError <
@@ -927,6 +957,7 @@ void testImpactPredictionConvergesToNonlinearImpact() {
 
 } // namespace
 
+/// Запускает валидацию терминальной поправки на последовательности масштабов.
 int main() {
     testImpactPredictionConvergesToNonlinearImpact();
 

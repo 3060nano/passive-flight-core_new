@@ -11,8 +11,11 @@
 
 namespace {
 
+/// Допуск сравнения временных координат терминальных точек, с.
 constexpr double kTimeComparisonToleranceS = 1.0e-12;
 
+/// Возвращает единый неизменяемый реестр объектов для траекторного C API.
+/// @return Ссылка на реестр, существующий до завершения процесса.
 const passive_flight::ObjectRegistry& registry() {
     static const passive_flight::ObjectRegistry instance =
         passive_flight::makeDefaultObjectRegistry();
@@ -20,6 +23,9 @@ const passive_flight::ObjectRegistry& registry() {
     return instance;
 }
 
+/// Проверяет конечность номинальных условий и начального возмущения.
+/// @param input Вход C API с величинами в единицах СИ.
+/// @return `true`, если все числовые поля конечны.
 bool isFinite(
     const PFPerturbedSimulationInput& input
 ) {
@@ -35,6 +41,10 @@ bool isFinite(
         std::isfinite(input.deltaAltitudeM);
 }
 
+/// Проверяет полный контракт входа возмущённой траектории.
+/// @param input Идентификатор объекта, условия сброса и `Delta x0`.
+/// @return `true`, если строка задана, условия сброса положительны,
+/// а все числовые поля конечны.
 bool isValidInput(
     const PFPerturbedSimulationInput& input
 ) {
@@ -48,6 +58,9 @@ bool isValidInput(
         input.releaseSpeedMps > 0.0;
 }
 
+/// Формирует номинальный запрос к объектному реестру.
+/// @param input Идентификатор, высота сброса в м и скорость в м/с.
+/// @return Запрос SimulationRequest в единицах СИ.
 passive_flight::SimulationRequest makeRequest(
     const PFPerturbedSimulationInput& input
 ) {
@@ -65,6 +78,9 @@ passive_flight::SimulationRequest makeRequest(
     return request;
 }
 
+/// Преобразует поля C ABI в начальный вектор малых возмущений.
+/// @param input Отклонения скорости, углов, угловой скорости и координат в СИ.
+/// @return Вектор `Delta x0` в единицах СИ.
 passive_flight::LongitudinalPerturbationState
 makeInitialPerturbation(
     const PFPerturbedSimulationInput& input
@@ -93,6 +109,8 @@ makeInitialPerturbation(
     return perturbation;
 }
 
+/// Формирует настройки интегрирования совместной траектории.
+/// @return Шаг 0,001 с и история с интервалом 0,01 с.
 passive_flight::SimulationOptions
 makeTrajectoryOptions() {
     passive_flight::SimulationOptions options;
@@ -122,6 +140,9 @@ makeTrajectoryOptions() {
     return options;
 }
 
+/// Преобразует внутреннюю совместную точку в структуру C ABI.
+/// @param sample Номинальное, возмущённое и полное состояния в единицах СИ.
+/// @return Точка PFPerturbedTrajectoryPoint с углами в радианах.
 PFPerturbedTrajectoryPoint makePoint(
     const passive_flight::PerturbedTrajectorySample& sample
 ) {
@@ -206,6 +227,12 @@ PFPerturbedTrajectoryPoint makePoint(
     return point;
 }
 
+/// Линейно продолжает номинальную траекторию до оценённого момента падения
+/// возмущённого объекта по формуле `x*(t_f) ≈ x*(t_f*) + x_dot*(t_f*)*Delta t_f`.
+/// @param nominalImpactState Номинальное состояние при `t_f*` в единицах СИ.
+/// @param nominalImpactDerivative Правая часть в состоянии падения.
+/// @param deltaTimeS Поправка к моменту падения `Delta t_f`, с.
+/// @return Линейно продолженное номинальное состояние при `t_f`.
 passive_flight::State makeNominalStateAtPerturbedImpact(
     const passive_flight::State& nominalImpactState,
     const passive_flight::StateDerivative& nominalImpactDerivative,
@@ -256,6 +283,12 @@ passive_flight::State makeNominalStateAtPerturbedImpact(
     return state;
 }
 
+/// Формирует терминальную точку истории в собственный момент падения
+/// возмущённого объекта.
+/// @param result Результат распространения малых возмущений до `t_f*`.
+/// @param finalNominalDerivative Правая часть номинальной системы при `t_f*`.
+/// @param analysis Терминальные поправки первого порядка.
+/// @return Совместная точка C ABI при оценённом времени `t_f`, с.
 PFPerturbedTrajectoryPoint makeTerminalImpactPoint(
     const passive_flight::PerturbedSimulationResult& result,
     const passive_flight::StateDerivative& finalNominalDerivative,
@@ -362,6 +395,16 @@ PFPerturbedTrajectoryPoint makeTerminalImpactPoint(
     return point;
 }
 
+/*
+ * Формирует внешнюю историю до собственного события падения возмущённого
+ * объекта. При более раннем падении номинальная история обрезается, при более
+ * позднем — дополняется линейно оценённой терминальной точкой.
+ * @param result Совместная история до номинального события `t_f*`.
+ * @param finalNominalDerivative Правая часть номинальной системы при `t_f*`.
+ * @param analysis Оценка времени и состояния возмущённого падения.
+ * @return Хронологическая последовательность точек C ABI; время задано в с,
+ * координаты в м, скорости в м/с, углы в радианах.
+ */
 std::vector<PFPerturbedTrajectoryPoint>
 buildOutputTrajectory(
     const passive_flight::PerturbedSimulationResult& result,

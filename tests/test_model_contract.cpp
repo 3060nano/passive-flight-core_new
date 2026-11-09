@@ -16,6 +16,7 @@ using passive_flight::State;
 using passive_flight::TerminationReason;
 using passive_flight::ValidationIssues;
 
+/// Требует выполнения логического условия теста контракта модели.
 void require(
     bool condition,
     const std::string& message
@@ -25,6 +26,7 @@ void require(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void requireNear(
     double actual,
     double expected,
@@ -42,6 +44,7 @@ void requireNear(
     }
 }
 
+/// Проверяет допустимые высоту и скорость горизонтального сброса.
 void testValidReleaseConditions() {
     const ReleaseConditions release{
         10'000.0,
@@ -57,6 +60,7 @@ void testValidReleaseConditions() {
     );
 }
 
+/// Проверяет обнаружение неположительной высоты сброса.
 void testInvalidAltitude() {
     const ReleaseConditions release{
         0.0,
@@ -82,6 +86,7 @@ void testInvalidAltitude() {
     );
 }
 
+/// Проверяет обнаружение неположительной скорости сброса.
 void testInvalidSpeed() {
     const ReleaseConditions release{
         10'000.0,
@@ -107,6 +112,7 @@ void testInvalidSpeed() {
     );
 }
 
+/// Проверяет обнаружение NaN и бесконечных входных значений.
 void testNonFiniteInput() {
     const double notANumber =
         std::numeric_limits<double>::quiet_NaN();
@@ -125,6 +131,7 @@ void testNonFiniteInput() {
     );
 }
 
+/// Проверяет обязательность строкового идентификатора объекта.
 void testEmptyObjectIdentifier() {
     SimulationRequest request;
 
@@ -151,6 +158,7 @@ void testEmptyObjectIdentifier() {
     );
 }
 
+/// Проверяет формирование состояния горизонтального сброса в единицах СИ.
 void testHorizontalReleaseState() {
     const ReleaseConditions release{
         8'000.0,
@@ -217,6 +225,7 @@ void testHorizontalReleaseState() {
     );
 }
 
+/// Проверяет исключение при формировании состояния из некорректных условий.
 void testInvalidReleaseStateThrows() {
     const ReleaseConditions release{
         -100.0,
@@ -239,6 +248,7 @@ void testInvalidReleaseStateThrows() {
     );
 }
 
+/// Проверяет преобразование полного результата в краткие параметры падения.
 void testSimulationSummary() {
     SimulationResult result;
 
@@ -289,6 +299,7 @@ void testSimulationSummary() {
     );
 }
 
+/// Проверяет стабильные текстовые имена всех причин остановки.
 void testTerminationReasonNames() {
     require(
         std::string(
@@ -311,6 +322,7 @@ void testTerminationReasonNames() {
 
 } // namespace
 
+/// Запускает проверки контрактов запросов, состояний и результатов.
 int main() {
     try {
         testValidReleaseConditions();

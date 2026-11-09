@@ -7,8 +7,10 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -23,6 +25,7 @@ void check(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void checkNear(
     double actual,
     double expected,
@@ -46,6 +49,7 @@ void checkNear(
     }
 }
 
+/// Требует возникновения исключения ExceptionType при вызове function.
 template <
     typename ExceptionType,
     typename Function
@@ -77,6 +81,8 @@ void checkThrows(
     }
 }
 
+/// Формирует двухузловой набор коэффициентов с известными зависимостями.
+/// @return Таблицы по числу Маха для проверки интерполяции и формул модели.
 passive_flight::TabulatedAerodynamicData
 makeTestData() {
     using Point =
@@ -112,6 +118,7 @@ makeTestData() {
     return data;
 }
 
+/// Проверяет точное воспроизведение коэффициентов в табличных узлах.
 void testNodeValues() {
     const passive_flight::TabulatedAerodynamicModel model(
         3.0,
@@ -187,6 +194,7 @@ void testNodeValues() {
     );
 }
 
+/// Проверяет значения сплайна на тестовом промежуточном числе Маха.
 void testLinearInterpolation() {
     const passive_flight::TabulatedAerodynamicModel model(
         3.0,
@@ -232,6 +240,7 @@ void testLinearInterpolation() {
     );
 }
 
+/// Проверяет редукцию модели к Cx0 при нулевых alpha и omega_z.
 void testZeroAlphaAndZeroPitchRate() {
     const passive_flight::TabulatedAerodynamicModel model(
         3.0,
@@ -270,6 +279,7 @@ void testZeroAlphaAndZeroPitchRate() {
     );
 }
 
+/// Проверяет знаки статической устойчивости и демпфирования тангажа.
 void testStabilitySigns() {
     const passive_flight::TabulatedAerodynamicModel model(
         3.0,
@@ -318,6 +328,7 @@ void testStabilitySigns() {
     );
 }
 
+/// Проверяет валидацию таблиц и запрет обращения вне диапазона Маха.
 void testInvalidTablesAndRange() {
     auto data =
         makeTestData();
@@ -361,6 +372,7 @@ void testInvalidTablesAndRange() {
 
 } // namespace
 
+/// Запускает проверки табличной аэродинамической модели.
 int main() {
     testNodeValues();
     testLinearInterpolation();

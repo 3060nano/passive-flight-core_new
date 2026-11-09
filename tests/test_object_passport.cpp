@@ -9,12 +9,14 @@
 
 namespace {
 
+/// Требует выполнения логического условия теста паспорта.
 void require(bool condition, const char* message) {
     if (!condition) {
         throw std::runtime_error(message);
     }
 }
 
+/// Проверяет абсолютное отклонение чисел в единицах паспортного параметра.
 void requireNear(
     double actual,
     double expected,
@@ -26,6 +28,7 @@ void requireNear(
     }
 }
 
+/// Требует отсутствия нарушений валидации и формирует подробную диагностику.
 void requireValid(
     const passive_flight::ObjectPassport& passport,
     const char* message
@@ -42,6 +45,7 @@ void requireValid(
     throw std::runtime_error(details);
 }
 
+/// Проверяет значения и происхождение параметров контрольного паспорта.
 void testFab1500TPassport() {
     const auto passport =
         passive_flight::makeFab1500TPostnikovPassport();
@@ -98,6 +102,7 @@ void testFab1500TPassport() {
     requireValid(passport, "FAB-1500T passport must be valid");
 }
 
+/// Проверяет обнаружение пустой обязательной аэродинамической таблицы.
 void testEmptyTabulatedTableDetected() {
     auto passport = passive_flight::makeFab1500TPostnikovPassport();
     passport.object.tabulatedAerodynamics.cyAlpha.clear();
@@ -107,6 +112,7 @@ void testEmptyTabulatedTableDetected() {
     );
 }
 
+/// Проверяет обнаружение неположительной массы объекта.
 void testInvalidMassDetected() {
     auto passport = passive_flight::makeFab1500TPostnikovPassport();
     passport.object.mass.massKg = -1519.0;
@@ -116,6 +122,7 @@ void testInvalidMassDetected() {
     );
 }
 
+/// Проверяет обнаружение повторяющегося пути паспортного параметра.
 void testDuplicateParameterDetected() {
     auto passport = passive_flight::makeFab1500TPostnikovPassport();
     passport.parameters.push_back(passport.parameters.front());
@@ -129,6 +136,7 @@ void testDuplicateParameterDetected() {
     require(duplicateFound, "Duplicate provenance record must be detected");
 }
 
+/// Проверяет стабильные текстовые имена перечислений паспорта.
 void testNames() {
     require(
         std::string(passive_flight::parameterStatusName(
@@ -146,6 +154,7 @@ void testNames() {
 
 } // namespace
 
+/// Запускает проверки структуры, значений и валидации паспортов.
 int main() {
     try {
         testFab1500TPassport();

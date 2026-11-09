@@ -10,6 +10,9 @@
 namespace passive_flight {
 namespace {
 
+/// Проверяет конечность всех компонент состояния траектории.
+/// @param state Время и компоненты состояния в принятых единицах СИ.
+/// @return `true`, если каждая компонента представима конечным числом.
 bool isFiniteState(
     const State& state
 ) {
@@ -23,6 +26,10 @@ bool isFiniteState(
         std::isfinite(state.altitudeM);
 }
 
+/// Проверяет численные настройки явного интегрирования.
+/// @param options Шаг и предельное время в с, высота поверхности в м,
+/// предельные счётчики шагов и частоты сохранения.
+/// @return `true`, если настройки конечны и лежат в допустимых диапазонах.
 bool areValidOptions(
     const SimulationOptions& options
 ) {
@@ -40,6 +47,11 @@ bool areValidOptions(
         options.historyStride > 0;
 }
 
+/// Проверяет соответствие запроса фиксированной модели решателя.
+/// @param request Идентификатор модели, высота сброса в м и скорость в м/с.
+/// @param options Настройки, содержащие высоту поверхности в м.
+/// @param object Фиксированная числовая модель расчётного объекта.
+/// @return `true`, если идентификатор совпадает и условия сброса допустимы.
 bool isValidRequestForObject(
     const SimulationRequest& request,
     const SimulationOptions& options,
@@ -74,6 +86,13 @@ bool isValidRequestForObject(
     return true;
 }
 
+/// Формирует диагностические величины для одного состояния траектории.
+/// В частности, вычисляет число Рейнольдса
+/// `Re = rho*V*D/mu`, где `D` — диаметр корпуса, м.
+/// @param state Состояние объекта в единицах СИ.
+/// @param evaluation Результат вычисления правой части в том же состоянии.
+/// @param object Модель с диаметром корпуса и опорной геометрией в СИ.
+/// @return Диагностика с безразмерными числами, силами в Н и моментом в Н·м.
 StepDiagnostics makeStepDiagnostics(
     const State& state,
     const LongitudinalDynamicsEvaluation& evaluation,
@@ -125,6 +144,11 @@ StepDiagnostics makeStepDiagnostics(
     return diagnostics;
 }
 
+/// Объединяет состояние и соответствующую ему диагностику в точку истории.
+/// @param state Состояние траектории в единицах СИ.
+/// @param evaluation Правая часть и нагрузки для этого состояния.
+/// @param object Модель объекта, необходимая для расчёта числа Рейнольдса.
+/// @return Полностью заполненная точка истории траектории.
 TrajectorySample makeTrajectorySample(
     const State& state,
     const LongitudinalDynamicsEvaluation& evaluation,
@@ -144,6 +168,9 @@ TrajectorySample makeTrajectorySample(
     return sample;
 }
 
+/// Добавляет точку истории либо заменяет точку с тем же моментом времени.
+/// @param result Изменяемый результат моделирования.
+/// @param sample Новая точка с временем в с и состоянием в единицах СИ.
 void appendSampleIfDifferent(
     SimulationResult& result,
     const TrajectorySample& sample
@@ -166,6 +193,12 @@ void appendSampleIfDifferent(
     }
 }
 
+/// Выполняет один шаг явного метода Эйлера
+/// `x_(n+1) = x_n + dt*f(x_n)` для всех компонент состояния.
+/// @param current Состояние в начале шага в единицах СИ.
+/// @param derivative Правая часть системы в согласованных единицах СИ.
+/// @param timeStepS Длительность шага `dt`, с.
+/// @return Состояние на конце шага в единицах СИ.
 State makeEulerStep(
     const State& current,
     const StateDerivative& derivative,
@@ -210,6 +243,11 @@ State makeEulerStep(
     return next;
 }
 
+/// Вычисляет линейную интерполяцию `y = y0 + lambda*(y1-y0)`.
+/// @param first Значение при `lambda = 0` в единицах интерполируемой величины.
+/// @param second Значение при `lambda = 1` в тех же единицах.
+/// @param interpolationParameter Безразмерный параметр `lambda`.
+/// @return Интерполированное значение в единицах аргументов first и second.
 double interpolateValue(
     double first,
     double second,
@@ -221,6 +259,13 @@ double interpolateValue(
         (second - first);
 }
 
+/// Уточняет состояние пересечения заданной горизонтальной поверхности.
+/// Каждая компонента линейно интерполируется между состояниями по разные
+/// стороны поверхности; высота результата точно равна groundAltitudeM.
+/// @param aboveGround Состояние над поверхностью в единицах СИ.
+/// @param belowGround Состояние под поверхностью в единицах СИ.
+/// @param groundAltitudeM Геометрическая высота поверхности, м.
+/// @return Интерполированное состояние события достижения поверхности.
 State interpolateGroundImpact(
     const State& aboveGround,
     const State& belowGround,

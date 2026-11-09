@@ -7,6 +7,13 @@
 namespace passive_flight {
 namespace {
 
+/// Проверяет физическую допустимость констант атмосферной модели.
+/// Дополнительно вычисляет температуру тропопаузы и требует её
+/// положительности для заданного температурного градиента.
+/// @param parameters Температуры в К, давление в Па, высоты в м и прочие
+/// параметры в единицах СИ.
+/// @throws std::invalid_argument Если значение не конечно либо нарушает
+/// физические или геометрические ограничения модели.
 void validateParameters(
     const StandardAtmosphereParameters& parameters
 ) {
@@ -123,6 +130,11 @@ void validateParameters(
     }
 }
 
+/// Преобразует геометрическую высоту в геопотенциальную по формуле
+/// `H_p = R_e*H/(R_e+H)`.
+/// @param geometricAltitudeM Геометрическая высота `H`, м.
+/// @param earthRadiusM Принятый средний радиус Земли `R_e`, м.
+/// @return Геопотенциальная высота `H_p`, м.
 double geometricToGeopotentialAltitude(
     double geometricAltitudeM,
     double earthRadiusM
@@ -131,6 +143,10 @@ double geometricToGeopotentialAltitude(
            (earthRadiusM + geometricAltitudeM);
 }
 
+/// Вычисляет динамическую вязкость воздуха по формуле Сазерленда.
+/// @param temperatureK Термодинамическая температура воздуха, К.
+/// @param parameters Опорная температура, вязкость и постоянная Сазерленда.
+/// @return Динамическая вязкость воздуха, Па·с.
 double calculateDynamicViscosity(
     double temperatureK,
     const StandardAtmosphereParameters& parameters

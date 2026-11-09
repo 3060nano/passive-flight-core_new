@@ -10,8 +10,10 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -22,6 +24,7 @@ void check(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void checkNear(
     double actual,
     double expected,
@@ -40,6 +43,7 @@ void checkNear(
     }
 }
 
+/// Создаёт совместный решатель для контрольной ФАБ-1500Т.
 passive_flight::PerturbedTrajectorySimulator
 makeSimulator() {
     const auto passport =
@@ -50,6 +54,7 @@ makeSimulator() {
     );
 }
 
+/// Формирует запрос горизонтального сброса с H0 = 100 м и V0 = 200 м/с.
 passive_flight::SimulationRequest makeRequest() {
     return {
         "FAB_1500T_POSTNIKOV_1979",
@@ -57,6 +62,7 @@ passive_flight::SimulationRequest makeRequest() {
     };
 }
 
+/// Формирует настройки короткого расчёта длительностью 0,01 с.
 passive_flight::SimulationOptions makeShortOptions() {
     passive_flight::SimulationOptions options;
 
@@ -69,6 +75,7 @@ passive_flight::SimulationOptions makeShortOptions() {
     return options;
 }
 
+/// Проверяет совпадение полного и номинального решений при Delta x0 = 0.
 void testZeroPerturbationReproducesNominalTrajectory() {
     const auto simulator = makeSimulator();
 
@@ -125,6 +132,7 @@ void testZeroPerturbationReproducesNominalTrajectory() {
     );
 }
 
+/// Проверяет сохранение начального возмущения и его последующую эволюцию.
 void testInitialPerturbationIsStoredAndEvolves() {
     const auto simulator = makeSimulator();
     const auto options = makeShortOptions();
@@ -185,6 +193,7 @@ void testInitialPerturbationIsStoredAndEvolves() {
     );
 }
 
+/// Проверяет один шаг формулы `Delta x_(n+1)=Delta x_n+dt*A_n*Delta x_n`.
 void testOneStepMatchesExplicitEulerFormula() {
     const auto simulator = makeSimulator();
 
@@ -242,6 +251,7 @@ void testOneStepMatchesExplicitEulerFormula() {
     );
 }
 
+/// Проверяет применение запрошенного шага прореживания внешней истории.
 void testRequestedHistoryStrideIsApplied() {
     const auto simulator = makeSimulator();
 
@@ -288,6 +298,7 @@ void testRequestedHistoryStrideIsApplied() {
     );
 }
 
+/// Проверяет отклонение возмущения с компонентой NaN.
 void testInvalidPerturbationIsRejected() {
     const auto simulator = makeSimulator();
 
@@ -313,6 +324,7 @@ void testInvalidPerturbationIsRejected() {
     );
 }
 
+/// Проверяет расчёт конечного состояния при отключённой внешней истории.
 void testHistoryCanBeDisabled() {
     const auto simulator = makeSimulator();
 
@@ -341,6 +353,7 @@ void testHistoryCanBeDisabled() {
     );
 }
 
+/// Проверяет запрет нулевого шага прореживания истории.
 void testZeroHistoryStrideIsRejected() {
     const auto simulator = makeSimulator();
 
@@ -367,6 +380,7 @@ void testZeroHistoryStrideIsRejected() {
 
 } // namespace
 
+/// Запускает проверки совместного интегрирования номинальной траектории и возмущений.
 int main() {
     testZeroPerturbationReproducesNominalTrajectory();
     testInitialPerturbationIsStoredAndEvolves();

@@ -8,6 +8,10 @@
 namespace passive_flight {
 namespace {
 
+/// Требует конечного значения скалярного параметра.
+/// @param value Проверяемое число в единицах соответствующего параметра.
+/// @param parameterName Диагностическое имя параметра.
+/// @throws std::invalid_argument Если значение не является конечным.
 void requireFinite(
     double value,
     const char* parameterName
@@ -20,6 +24,10 @@ void requireFinite(
     }
 }
 
+/// Проверяет область определения правой части продольного движения.
+/// @param state Состояние в единицах СИ; углы заданы в радианах.
+/// @throws std::invalid_argument Если компонента не конечна, время отрицательно
+/// или модуль скорости не положителен.
 void validateState(
     const State& state
 ) {

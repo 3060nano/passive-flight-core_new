@@ -14,36 +14,36 @@
  *
  * Входы:
  *
- * 0 — releaseAltitudeM;
- * 1 — releaseSpeedMps;
- * 2 — objectIndex;
- * 3 — Delta V0, m/s;
- * 4 — Delta Theta0, rad;
- * 5 — Delta omega_z0, rad/s;
- * 6 — Delta theta0, rad;
- * 7 — Delta x0, m;
- * 8 — Delta H0, m.
+ * 0 — геометрическая высота сброса `releaseAltitudeM`, м;
+ * 1 — модуль скорости в момент сброса `releaseSpeedMps`, м/с;
+ * 2 — безразмерный индекс объекта в реестре `objectIndex`;
+ * 3 — Delta V0, м/с;
+ * 4 — Delta Theta0, рад;
+ * 5 — Delta omega_z0, рад/с;
+ * 6 — Delta theta0, рад;
+ * 7 — Delta x0, м;
+ * 8 — Delta H0, м.
  *
  * Выходы:
  *
- * 9  — Delta t_f, s;
- * 10 — Delta L, m;
- * 11 — Delta V_impact, m/s;
- * 12 — Delta Theta_impact, deg;
- * 13 — Delta omega_z_impact, deg/s;
- * 14 — Delta theta_impact, deg;
- * 15 — Delta alpha_impact, deg;
+ * 9  — Delta t_f, с;
+ * 10 — Delta L, м;
+ * 11 — Delta V_impact, м/с;
+ * 12 — Delta Theta_impact, град;
+ * 13 — Delta omega_z_impact, град/с;
+ * 14 — Delta theta_impact, град;
+ * 15 — Delta alpha_impact, град;
  *
- * 16 — perturbed impact time, s;
- * 17 — perturbed impact downrange, m;
- * 18 — perturbed impact speed, m/s;
- * 19 — perturbed impact Theta, deg;
- * 20 — perturbed impact omega_z, deg/s;
- * 21 — perturbed impact theta, deg;
- * 22 — perturbed impact alpha, deg;
+ * 16 — время падения возмущённого объекта, с;
+ * 17 — дальность падения возмущённого объекта, м;
+ * 18 — скорость падения возмущённого объекта, м/с;
+ * 19 — угол Theta возмущённого объекта, град;
+ * 20 — угловая скорость omega_z возмущённого объекта, град/с;
+ * 21 — угол theta возмущённого объекта, град;
+ * 22 — угол alpha возмущённого объекта, град;
  *
- * 23 — terminationReason;
- * 24 — resultCode.
+ * 23 — безразмерный код причины завершения;
+ * 24 — безразмерный код результата C API.
  */
 enum {
     PF_SIT_P_RELEASE_ALTITUDE_INDEX = 0,
@@ -86,9 +86,9 @@ enum {
  *
  * Начальное возмущение по умолчанию:
  *
- * Delta V0 = 1 m/s;
- * Delta theta0 = 0.1 deg;
- * остальные Delta = 0.
+ * Delta V0 = 1 м/с;
+ * Delta theta0 = 0,1° = 0,001745329... рад;
+ * остальные компоненты Delta x0 равны нулю.
  */
 static double defaultReleaseAltitudeM = 100.0;
 static double defaultReleaseSpeedMps = 200.0;
@@ -103,7 +103,9 @@ static double defaultDeltaDownrangeM = 0.0;
 static double defaultDeltaAltitudeM = 0.0;
 
 /*
- * Значения выходов по умолчанию.
+ * Начальные выходы: поправки времени — с, координат — м, скорости — м/с;
+ * угловые величины хранятся внутри блока в рад и рад/с, а на порты
+ * передаются в град и град/с; коды завершения безразмерны.
  */
 static double defaultDeltaFallTimeS = 0.0;
 static double defaultDeltaImpactRangeM = 0.0;
@@ -439,11 +441,17 @@ typedef struct PFPerturbedSimInTechLocalState {
     int32_t resultCode;
 } PFPerturbedSimInTechLocalState;
 
+/* Служебное описание задачи, заполняемое исполнительной средой SimInTech. */
 static TTaskInfoStruct taskInfo;
 
+/* Стабильный 32-битный идентификатор схемы терминального блока возмущений. */
 static const unsigned int schemeHash32 =
     0x50465032U;
 
+/*
+ * Возвращает адрес внешней скалярной переменной по безразмерному индексу.
+ * Возвращает адрес double либо NULL при отсутствии массива extVarsAddress.
+ */
 static double* externalDouble(
     void** extVarsAddress,
     int index
@@ -455,6 +463,7 @@ static double* externalDouble(
     return (double*) extVarsAddress[index];
 }
 
+/* Записывает значение в порт с заданным индексом при наличии его адреса. */
 static void writeExternalDouble(
     void** extVarsAddress,
     int index,
@@ -471,6 +480,10 @@ static void writeExternalDouble(
     }
 }
 
+/*
+ * Проверяет доступность всех внешних портов блока.
+ * Возвращает 1 при наличии каждого адреса либо 0 при обнаружении NULL.
+ */
 static int allExternalVariablesAreAvailable(
     void** extVarsAddress
 ) {
@@ -491,6 +504,10 @@ static int allExternalVariablesAreAvailable(
     return 1;
 }
 
+/*
+ * Обнуляет терминальные поправки локального кэша в единицах СИ
+ * и устанавливает PF_RESULT_INVALID_INPUT.
+ */
 static void clearLocalResult(
     PFPerturbedSimInTechLocalState* localState
 ) {
@@ -511,6 +528,10 @@ static void clearLocalResult(
         PF_RESULT_INVALID_INPUT;
 }
 
+/*
+ * Записывает терминальные поправки на порты SimInTech. Расстояния, время
+ * и скорости сохраняют единицы СИ; углы переводятся из рад в градусы.
+ */
 static void writeLocalResultToPorts(
     void** extVarsAddress,
     const PFPerturbedSimInTechLocalState* localState
@@ -637,6 +658,10 @@ static void writeLocalResultToPorts(
     );
 }
 
+/*
+ * Преобразует вещественный индекс объекта в строковый идентификатор UTF-8.
+ * objectIdCapacity задана в байтах. Возвращает PFResultCode.
+ */
 static int objectIndexToId(
     double objectIndexValue,
     char* objectId,
@@ -678,6 +703,10 @@ static int objectIndexToId(
     );
 }
 
+/*
+ * Сравнивает девять текущих входных величин с сохранённым набором.
+ * Возвращает 1 при первом вызове или изменении хотя бы одного входа.
+ */
 static int inputsHaveChanged(
     const PFPerturbedSimInTechLocalState* localState,
     const PFPerturbedSimulationInput* input,
@@ -711,6 +740,10 @@ static int inputsHaveChanged(
             input->deltaAltitudeM;
 }
 
+/*
+ * Сохраняет номинальные условия, шесть компонент Delta x0 и индекс объекта
+ * в локальном кэше. Физические величины сохраняются во внутренних единицах СИ.
+ */
 static void rememberInputs(
     PFPerturbedSimInTechLocalState* localState,
     const PFPerturbedSimulationInput* input,
@@ -746,6 +779,11 @@ static void rememberInputs(
     localState->initialized = 1;
 }
 
+/*
+ * Читает один внешний порт double.
+ * index — безразмерный индекс; value получает величину в единицах порта.
+ * Возвращает 1 при успешном чтении либо 0 при NULL.
+ */
 static int readInput(
     void** extVarsAddress,
     int index,
@@ -773,6 +811,10 @@ static int readInput(
     return 1;
 }
 
+/*
+ * При изменении входов выполняет расчёт терминальных поправок первого порядка
+ * и сохраняет PFPerturbedImpactOutput в локальном состоянии блока.
+ */
 static void calculateIfNecessary(
     void** extVarsAddress,
     PFPerturbedSimInTechLocalState* localState

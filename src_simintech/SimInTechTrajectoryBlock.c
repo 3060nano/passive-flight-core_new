@@ -23,10 +23,10 @@
  *   out:1  — текущий относ, м;
  *   out:2  — текущая высота, м;
  *   out:3  — текущая скорость, м/с;
- *   out:4  — угол наклона траектории, рад;
- *   out:5  — угол тангажа, рад;
- *   out:6  — угловая скорость тангажа, рад/с;
- *   out:7  — угол атаки, рад;
+ *   out:4  — угол наклона траектории, град;
+ *   out:5  — угол тангажа, град;
+ *   out:6  — угловая скорость тангажа, град/с;
+ *   out:7  — угол атаки, град;
  *   out:8  — полное время падения, с;
  *   out:9  — признак окончания траектории;
  *   out:10 — код результата C API.
@@ -53,10 +53,16 @@ enum PFSimInTechTrajectoryVariableIndex {
     PF_TRAJECTORY_EXTERNAL_VARIABLE_COUNT = 14
 };
 
+/* Начальные входы: высота — м, скорость — м/с, индекс безразмерен. */
 static double defaultReleaseAltitudeM = 1000.0;
 static double defaultReleaseSpeedMps = 200.0;
 static double defaultObjectIndex = 0.0;
 
+/*
+ * Начальные выходы: время — с, координаты — м, скорость — м/с;
+ * угловые значения хранятся внутри блока в рад и преобразуются в градусы
+ * при записи на порты; признаки и коды безразмерны.
+ */
 static double defaultTrajectoryTimeS = 0.0;
 static double defaultDownrangeM = 0.0;
 static double defaultAltitudeM = 0.0;
@@ -252,11 +258,17 @@ typedef struct PFSimInTechTrajectoryLocalState {
     int32_t resultCode;
 } PFSimInTechTrajectoryLocalState;
 
+/* Служебное описание задачи, заполняемое исполнительной средой SimInTech. */
 static TTaskInfoStruct taskInfo;
 
+/* Стабильный 32-битный идентификатор схемы траекторного блока. */
 static const unsigned int schemeHash32 =
     0x50465432U;
 
+/*
+ * Возвращает адрес внешней скалярной переменной SimInTech.
+ * index — безразмерный индекс порта. Возвращает адрес double либо NULL.
+ */
 static double* externalDouble(
     void** extVarsAddress,
     int index
@@ -268,6 +280,7 @@ static double* externalDouble(
     return (double*) extVarsAddress[index];
 }
 
+/* Записывает значение в порт с заданным индексом, если адрес порта доступен. */
 static void writeExternalDouble(
     void** extVarsAddress,
     int index,
@@ -284,6 +297,10 @@ static void writeExternalDouble(
     }
 }
 
+/*
+ * Проверяет доступность всех внешних портов.
+ * Возвращает 1 при наличии каждого адреса либо 0 при обнаружении NULL.
+ */
 static int allExternalVariablesAreAvailable(
     void** extVarsAddress
 ) {
@@ -305,6 +322,7 @@ static int allExternalVariablesAreAvailable(
     return 1;
 }
 
+/* Обнуляет краткий результат траектории и задаёт причину некорректного входа. */
 static void clearSummary(
     PFSimulationOutput* summary
 ) {
@@ -322,6 +340,10 @@ static void clearSummary(
         PF_TERMINATION_INVALID_INPUT;
 }
 
+/*
+ * Освобождает динамический массив траектории и очищает связанные поля кэша.
+ * localState может быть NULL; повторный вызов безопасен.
+ */
 static void releaseTrajectory(
     PFSimInTechTrajectoryLocalState* localState
 ) {
@@ -338,6 +360,10 @@ static void releaseTrajectory(
     );
 }
 
+/*
+ * Преобразует вещественный индекс объекта в строковый идентификатор UTF-8.
+ * Ёмкость objectIdCapacity задана в байтах. Возвращает PFResultCode.
+ */
 static int objectIndexToId(
     double objectIndexValue,
     char* objectId,
@@ -378,6 +404,10 @@ static int objectIndexToId(
     );
 }
 
+/*
+ * Сравнивает высоту в м, скорость в м/с и безразмерный индекс объекта
+ * с входами сохранённой траектории. Возвращает 1 при изменении.
+ */
 static int inputsHaveChanged(
     const PFSimInTechTrajectoryLocalState* localState,
     double releaseAltitudeM,
@@ -398,6 +428,10 @@ static int inputsHaveChanged(
             objectIndex;
 }
 
+/*
+ * При изменении входов выполняет двухпроходный запрос траектории C API,
+ * размещает точки в динамическом массиве и обновляет локальный кэш.
+ */
 static void calculateTrajectoryIfNecessary(
     void** extVarsAddress,
     PFSimInTechTrajectoryLocalState* localState
@@ -546,6 +580,11 @@ static void calculateTrajectoryIfNecessary(
         PF_RESULT_OK;
 }
 
+/*
+ * Вычисляет `y = y0 + lambda*(y1-y0)`.
+ * first и second заданы в одинаковых единицах, ratio безразмерен;
+ * возвращаемое значение имеет единицы интерполируемой величины.
+ */
 static double interpolateValue(
     double first,
     double second,
@@ -555,6 +594,11 @@ static double interpolateValue(
         (second - first) * ratio;
 }
 
+/*
+ * Интерполирует точку траектории на запрошенный момент modelTime.
+ * requestedTimeS задан в с; координаты результата — в м, скорость — м/с,
+ * углы — в рад. За границами истории возвращается ближайшая крайняя точка.
+ */
 static PFTrajectoryPoint trajectoryPointAtTime(
     const PFSimInTechTrajectoryLocalState* localState,
     double requestedTimeS
@@ -689,6 +733,7 @@ static PFTrajectoryPoint trajectoryPointAtTime(
     return result;
 }
 
+/* Обнуляет физические выходы блока и записывает заданный PFResultCode. */
 static void clearOutputPorts(
     void** extVarsAddress,
     int32_t resultCode
@@ -712,6 +757,10 @@ static void clearOutputPorts(
     );
 }
 
+/*
+ * Выбирает точку траектории для текущего модельного времени и записывает её
+ * на порты: углы переводятся из рад в градусы, остальные величины остаются в СИ.
+ */
 static void writeTrajectoryOutputs(
     void** extVarsAddress,
     const PFSimInTechTrajectoryLocalState* localState,

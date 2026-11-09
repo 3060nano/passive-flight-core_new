@@ -9,6 +9,8 @@
 
 namespace {
 
+/// Возвращает единый неизменяемый реестр объектов для возмущённого C API.
+/// @return Ссылка на реестр, существующий до завершения процесса.
 const passive_flight::ObjectRegistry& registry() {
     static const passive_flight::ObjectRegistry instance =
         passive_flight::makeDefaultObjectRegistry();
@@ -16,6 +18,9 @@ const passive_flight::ObjectRegistry& registry() {
     return instance;
 }
 
+/// Преобразует внутреннюю причину остановки в стабильное значение C ABI.
+/// @param reason Причина завершения C++-решателя.
+/// @return Соответствующая константа PFTerminationReason.
 int32_t mapTerminationReason(
     passive_flight::TerminationReason reason
 ) {
@@ -39,6 +44,9 @@ int32_t mapTerminationReason(
     return PF_TERMINATION_INVALID_STATE;
 }
 
+/// Обнуляет терминальные поправки и устанавливает признак некорректного входа.
+/// @param output Изменяемый результат; величины заданы в единицах СИ,
+/// угловые поправки — в радианах.
 void clearOutput(
     PFPerturbedImpactOutput& output
 ) {
@@ -64,6 +72,9 @@ void clearOutput(
         PF_TERMINATION_INVALID_INPUT;
 }
 
+/// Проверяет конечность номинальных условий и шести начальных возмущений.
+/// @param input Вход C API с величинами в единицах СИ.
+/// @return `true`, если все числовые поля конечны.
 bool isFinite(
     const PFPerturbedSimulationInput& input
 ) {
@@ -79,6 +90,10 @@ bool isFinite(
         std::isfinite(input.deltaAltitudeM);
 }
 
+/// Проверяет полный контракт входа возмущённого расчёта.
+/// @param input Идентификатор объекта, условия сброса и начальное возмущение.
+/// @return `true`, если идентификатор задан, высота и скорость положительны,
+/// а все числовые поля конечны.
 bool isValidInput(
     const PFPerturbedSimulationInput& input
 ) {
@@ -92,6 +107,9 @@ bool isValidInput(
         input.releaseSpeedMps > 0.0;
 }
 
+/// Формирует номинальный запрос к объектному реестру.
+/// @param input Идентификатор, высота сброса в м и скорость в м/с.
+/// @return Запрос SimulationRequest в единицах СИ.
 passive_flight::SimulationRequest makeRequest(
     const PFPerturbedSimulationInput& input
 ) {
@@ -109,6 +127,9 @@ passive_flight::SimulationRequest makeRequest(
     return request;
 }
 
+/// Преобразует шесть полей C ABI в вектор начальных малых возмущений.
+/// @param input Отклонения скорости, углов, угловой скорости и координат в СИ.
+/// @return Вектор `Delta x0` в единицах СИ.
 passive_flight::LongitudinalPerturbationState
 makeInitialPerturbation(
     const PFPerturbedSimulationInput& input
@@ -137,6 +158,8 @@ makeInitialPerturbation(
     return perturbation;
 }
 
+/// Формирует настройки внутреннего интегрирования терминальной задачи.
+/// @return Шаг 0,001 с, поверхность H = 0 м и отключённая внешняя история.
 passive_flight::SimulationOptions
 makeSimulationOptions() {
     passive_flight::SimulationOptions options;
@@ -151,7 +174,7 @@ makeSimulationOptions() {
      * Внешняя история этому API не нужна.
      * PerturbedTrajectorySimulator всё равно
      * внутренне сохраняет каждый номинальный шаг,
-     * потому что он нужен для интегрирования Delta x.
+     * поскольку временная сетка необходима для интегрирования Delta x.
      */
     options.saveHistory = false;
     options.historyStride = 1;
@@ -159,6 +182,10 @@ makeSimulationOptions() {
     return options;
 }
 
+/// Переносит терминальные поправки первого порядка в структуру C ABI.
+/// @param analysis Поправки и оценённое состояние падения в единицах СИ.
+/// @param terminationReason Причина завершения номинального расчёта.
+/// @param output Заполняемый результат C API с углами в радианах.
 void fillOutput(
     const passive_flight::PerturbedImpactAnalysis& analysis,
     passive_flight::TerminationReason terminationReason,

@@ -10,6 +10,7 @@ enum {
     TEST_EXTERNAL_VARIABLE_COUNT = 34
 };
 
+/* Требует ненулевого condition; при нарушении завершает процесс с ошибкой. */
 static void require(
     int condition,
     const char* message
@@ -27,6 +28,7 @@ static void require(
     }
 }
 
+/* Проверяет `|actual-expected| <= tolerance` в единицах величины. */
 static void requireNear(
     double actual,
     double expected,
@@ -51,6 +53,7 @@ static void requireNear(
     }
 }
 
+/* Запускает проверку блока истории линейного возмущённого движения. */
 int main(void) {
     int nExtVars = 0;
     int nDinVars = 0;
@@ -226,15 +229,15 @@ int main(void) {
     );
 
     /*
-     * Output index mapping:
+     * Соответствие индексов выходным величинам блока:
      *
-     * 9 time
-     * 10..16 nominal
-     * 17..23 Delta
-     * 24..30 total
-     * 31 perturbed fall time
-     * 32 finished
-     * 33 result code
+     * 9 — время, с;
+     * 10..16 — компоненты номинального состояния;
+     * 17..23 — компоненты малого отклонения;
+     * 24..30 — компоненты полного возмущённого состояния;
+     * 31 — время падения возмущённого объекта, с;
+     * 32 — безразмерный признак завершения расчёта;
+     * 33 — безразмерный код результата.
      */
     requireNear(
         values[9],

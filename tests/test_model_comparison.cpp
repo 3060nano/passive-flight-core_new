@@ -7,12 +7,17 @@
 
 namespace {
 
+/// Требует выполнения логического условия сравнительного теста.
 void require(bool condition, const std::string& message) {
     if (!condition) {
         throw std::runtime_error(message);
     }
 }
 
+/// Выполняет расчёт выбранной модели при фиксированных условиях сброса.
+/// @param registry Реестр сравниваемых моделей.
+/// @param objectId Стабильный идентификатор модели.
+/// @return Траектория при H0 = 100 м, V0 = 200 м/с и шаге 0,001 с.
 passive_flight::SimulationResult simulate(
     const passive_flight::ObjectRegistry& registry,
     const std::string& objectId,
@@ -36,6 +41,8 @@ passive_flight::SimulationResult simulate(
 
 } // namespace
 
+/// Сравнивает дальность и время падения контрольной и модифицированных моделей.
+/// @return Нуль при успешном выполнении всех проверок.
 int main() {
     try {
         const auto registry = passive_flight::makeDefaultObjectRegistry();

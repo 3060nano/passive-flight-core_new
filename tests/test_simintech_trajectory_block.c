@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Индексы входных и выходных портов проверяемого траекторного блока. */
 enum TestTrajectoryVariableIndex {
     TEST_INPUT_ALTITUDE = 0,
     TEST_INPUT_SPEED = 1,
@@ -26,6 +27,7 @@ enum TestTrajectoryVariableIndex {
     TEST_EXTERNAL_VARIABLE_COUNT = 14
 };
 
+/* Требует ненулевого condition; при нарушении завершает процесс с ошибкой. */
 static void require(
     int condition,
     const char* message
@@ -41,6 +43,7 @@ static void require(
     }
 }
 
+/* Проверяет `|actual-expected| <= tolerance` в единицах величины. */
 static void requireNear(
     double actual,
     double expected,
@@ -61,7 +64,7 @@ static void requireNear(
     }
 }
 
-/* Переводит эталонные углы C API из радиан в градусы. */
+/* Принимает эталонный угол в рад и возвращает значение в градусах. */
 static double radiansToDegrees(
     double valueRad
 ) {
@@ -70,6 +73,7 @@ static double radiansToDegrees(
         57.2957795130823208768;
 }
 
+/* Запускает проверку временной интерполяции траекторного блока SimInTech. */
 int main(void) {
     int nExtVars = 0;
     int nDinVars = 0;

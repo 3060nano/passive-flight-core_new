@@ -5,8 +5,13 @@
 namespace passive_flight {
 namespace {
 
+/// Минимальный модуль вертикальной скорости, при котором допустимо деление
+/// в формуле `Delta t_f = -Delta H_f/H_dot_f`, м/с.
 constexpr double kMinimumVerticalSpeedMps = 1.0e-12;
 
+/// Проверяет конечность всех компонент вектора малых возмущений.
+/// @param perturbation Отклонения скорости, углов и координат в единицах СИ.
+/// @return `true`, если каждая компонента конечна.
 bool isFinite(
     const LongitudinalPerturbationState& perturbation
 ) {
@@ -29,6 +34,9 @@ bool isFinite(
         );
 }
 
+/// Проверяет конечность правой части номинальной системы.
+/// @param derivative Производные компонент состояния в единицах СИ.
+/// @return `true`, если каждая производная конечна.
 bool isFinite(
     const StateDerivative& derivative
 ) {
@@ -51,6 +59,9 @@ bool isFinite(
         );
 }
 
+/// Проверяет конечность номинального состояния.
+/// @param state Время и компоненты состояния в единицах СИ.
+/// @return `true`, если каждая компонента конечна.
 bool isFinite(
     const State& state
 ) {
@@ -74,6 +85,12 @@ bool isFinite(
         );
 }
 
+/// Формирует оценку состояния возмущённого объекта в его момент падения.
+/// К номинальному состоянию прибавляются терминальные поправки первого
+/// порядка, а высота сохраняется равной высоте общей поверхности.
+/// @param nominalImpactState Номинальное состояние события падения в СИ.
+/// @param changes Поправки к времени и компонентам состояния в СИ.
+/// @return Оценённое состояние возмущённого объекта в событии падения.
 State makeEstimatedImpactState(
     const State& nominalImpactState,
     const PerturbedImpactParameterChanges& changes

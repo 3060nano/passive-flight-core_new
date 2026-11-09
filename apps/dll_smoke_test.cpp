@@ -20,12 +20,16 @@ namespace {
 
 using ModuleHandle = HMODULE;
 
+/// Загружает динамическую библиотеку средствами Windows.
+/// @param path Системный путь к DLL с завершающим нулём.
+/// @return Дескриптор модуля либо nullptr при ошибке.
 ModuleHandle loadModule(
     const char* path
 ) {
     return LoadLibraryA(path);
 }
 
+/// Освобождает дескриптор Windows-модуля, если он задан.
 void unloadModule(
     ModuleHandle module
 ) {
@@ -34,6 +38,8 @@ void unloadModule(
     }
 }
 
+/// Находит экспортированный символ Windows DLL.
+/// @return Нетипизированный адрес символа либо nullptr.
 void* findSymbol(
     ModuleHandle module,
     const char* symbolName
@@ -46,6 +52,7 @@ void* findSymbol(
     );
 }
 
+/// Возвращает диагностическое сообщение последней ошибки загрузчика Windows.
 std::string moduleErrorMessage() {
     return
         "Windows error code: " +
@@ -56,11 +63,13 @@ std::string moduleErrorMessage() {
         );
 }
 
+/// Переводит ввод и вывод консоли Windows в кодировку UTF-8.
 void configureConsoleEncoding() {
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 }
 
+/// Возвращает штатное имя библиотеки C API для Windows.
 const char* defaultLibraryName() {
     return "libpassive_flight_c_api.dll";
 }
@@ -69,6 +78,9 @@ const char* defaultLibraryName() {
 
 using ModuleHandle = void*;
 
+/// Загружает динамическую библиотеку средствами POSIX.
+/// @param path Системный путь к SO или dylib с завершающим нулём.
+/// @return Дескриптор модуля либо nullptr при ошибке.
 ModuleHandle loadModule(
     const char* path
 ) {
@@ -78,6 +90,7 @@ ModuleHandle loadModule(
     );
 }
 
+/// Освобождает дескриптор POSIX-модуля, если он задан.
 void unloadModule(
     ModuleHandle module
 ) {
@@ -86,6 +99,8 @@ void unloadModule(
     }
 }
 
+/// Находит экспортированный символ POSIX-библиотеки.
+/// @return Нетипизированный адрес символа либо nullptr.
 void* findSymbol(
     ModuleHandle module,
     const char* symbolName
@@ -96,6 +111,7 @@ void* findSymbol(
     );
 }
 
+/// Возвращает диагностическое сообщение динамического загрузчика POSIX.
 std::string moduleErrorMessage() {
     const char* message = dlerror();
 
@@ -106,9 +122,11 @@ std::string moduleErrorMessage() {
     return message;
 }
 
+/// Не выполняет действий: POSIX-консоль не требует настройки Windows API.
 void configureConsoleEncoding() {
 }
 
+/// Возвращает штатное имя библиотеки C API для текущей POSIX-платформы.
 const char* defaultLibraryName() {
 #if defined(__APPLE__)
     return "libpassive_flight_c_api.dylib";
@@ -254,6 +272,10 @@ struct ApiFunctions {
     CalculateTrajectoryFunction calculateTrajectory{};
 };
 
+/// Разрешает все обязательные экспортированные функции C API.
+/// @param module Загруженная динамическая библиотека.
+/// @return Набор типизированных указателей на функции.
+/// @throws std::runtime_error Если хотя бы один экспорт отсутствует.
 ApiFunctions loadApiFunctions(
     const DynamicModule& module
 ) {
@@ -299,6 +321,8 @@ ApiFunctions loadApiFunctions(
     return functions;
 }
 
+/// Требует выполнения логического условия дымового теста.
+/// @throws std::runtime_error с текстом message, если condition равно false.
 void require(
     bool condition,
     const std::string& message
@@ -308,6 +332,9 @@ void require(
     }
 }
 
+/// Проверяет абсолютную погрешность `abs(actual-expected) <= tolerance`.
+/// Все три числовых аргумента задаются в единицах проверяемой величины.
+/// @throws std::runtime_error Если условие точности не выполнено.
 void requireNear(
     double actual,
     double expected,
@@ -319,6 +346,10 @@ void requireNear(
     }
 }
 
+/// Читает строковое свойство объекта двухпроходным вызовом C API.
+/// @param objectIndex Безразмерный индекс объекта в реестре DLL.
+/// @param function Функция чтения идентификатора или отображаемого имени.
+/// @return Скопированная строка UTF-8.
 std::string readString(
     uint64_t objectIndex,
     GetObjectIdFunction function
@@ -368,6 +399,9 @@ std::string readString(
     );
 }
     
+/// Выводит краткие параметры падения с обозначениями единиц СИ.
+/// @param output Результат C API: расстояние в м, время в с,
+/// скорость в м/с и углы в радианах.
 void printSummary(
     const PFSimulationOutput& output
 ) {
@@ -403,6 +437,10 @@ void printSummary(
         << '\n';
 }
 
+/// Выполняет сквозную проверку загрузки DLL, списка объектов, краткого
+/// расчёта и двухпроходного получения траектории.
+/// @param libraryPath Путь к динамической библиотеке C API.
+/// @throws std::runtime_error При нарушении любого проверяемого контракта.
 void runSmokeTest(
     const std::string& libraryPath
 ) {
@@ -643,6 +681,10 @@ void runSmokeTest(
 
 } // namespace
 
+/// Точка входа дымового теста динамической библиотеки.
+/// @param argc Число аргументов командной строки.
+/// @param argv Массив строк; argv[1] при наличии задаёт путь к библиотеке.
+/// @return EXIT_SUCCESS при успешной проверке, иначе EXIT_FAILURE.
 int main(
     int argc,
     char* argv[]

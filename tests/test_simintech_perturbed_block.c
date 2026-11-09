@@ -13,6 +13,7 @@ enum {
     TEST_EXTERNAL_VARIABLE_COUNT = 25
 };
 
+/* Требует ненулевого condition; при нарушении завершает процесс с ошибкой. */
 static void require(
     int condition,
     const char* message
@@ -30,6 +31,7 @@ static void require(
     }
 }
 
+/* Проверяет `|actual-expected| <= tolerance` в единицах величины. */
 static void requireNear(
     double actual,
     double expected,
@@ -54,7 +56,7 @@ static void requireNear(
     }
 }
 
-/* Переводит эталонные углы C API из радиан в градусы. */
+/* Принимает эталонный угол в рад и возвращает значение в градусах. */
 static double radiansToDegrees(
     double valueRad
 ) {
@@ -63,6 +65,7 @@ static double radiansToDegrees(
         57.2957795130823208768;
 }
 
+/* Запускает проверку терминального блока возмущённого движения SimInTech. */
 int main(void) {
     int nExtVars = 0;
     int nDinVars = 0;

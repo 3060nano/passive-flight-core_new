@@ -6,8 +6,10 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -22,6 +24,7 @@ void check(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void checkNear(
     double actual,
     double expected,
@@ -40,6 +43,8 @@ void checkNear(
     }
 }
 
+/// Формирует синтетический результат в момент номинального падения.
+/// @return Состояние и возмущение с известными компонентами в единицах СИ.
 passive_flight::PerturbedSimulationResult
 makeGroundReachedResult() {
     passive_flight::PerturbedSimulationResult result;
@@ -87,6 +92,8 @@ makeGroundReachedResult() {
     return result;
 }
 
+/// Формирует синтетическую правую часть в номинальном событии падения.
+/// @return Производные состояния в единицах СИ.
 passive_flight::StateDerivative
 makeFinalNominalDerivative() {
     passive_flight::StateDerivative derivative;
@@ -112,6 +119,7 @@ makeFinalNominalDerivative() {
     return derivative;
 }
 
+/// Проверяет уравнения терминальных поправок первого порядка.
 void testImpactEventCorrection() {
     const auto result =
         makeGroundReachedResult();
@@ -245,6 +253,7 @@ void testImpactEventCorrection() {
     );
 }
 
+/// Проверяет отрицательный знак Delta t_f при более раннем падении.
 void testEarlierImpactHasNegativeTimeChange() {
     auto result =
         makeGroundReachedResult();
@@ -271,6 +280,7 @@ void testEarlierImpactHasNegativeTimeChange() {
     );
 }
 
+/// Проверяет обязательность номинального завершения по условию поверхности.
 void testRequiresGroundReachedNominalTrajectory() {
     auto result =
         makeGroundReachedResult();
@@ -291,6 +301,7 @@ void testRequiresGroundReachedNominalTrajectory() {
     );
 }
 
+/// Проверяет отказ при практически нулевой вертикальной скорости события.
 void testRejectsDegenerateVerticalSpeed() {
     const auto result =
         makeGroundReachedResult();
@@ -313,6 +324,7 @@ void testRejectsDegenerateVerticalSpeed() {
     );
 }
 
+/// Проверяет нулевые терминальные поправки при Delta x = 0.
 void testZeroPerturbationKeepsNominalImpact() {
     auto result =
         makeGroundReachedResult();
@@ -354,6 +366,7 @@ void testZeroPerturbationKeepsNominalImpact() {
 
 } // namespace
 
+/// Запускает проверки линейного анализа события падения.
 int main() {
     testImpactEventCorrection();
     testEarlierImpactHasNegativeTimeChange();

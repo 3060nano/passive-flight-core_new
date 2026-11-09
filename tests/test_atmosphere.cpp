@@ -8,8 +8,10 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения теста.
 void check(
     bool condition,
     const std::string& message
@@ -20,6 +22,8 @@ void check(
     }
 }
 
+/// Проверяет абсолютную погрешность физической величины.
+/// Числа actual, expected и tolerance задаются в одинаковых единицах.
 void checkNear(
     double actual,
     double expected,
@@ -38,6 +42,7 @@ void checkNear(
     }
 }
 
+/// Требует возникновения исключения ExceptionType при вызове function.
 template <typename ExceptionType, typename Function>
 void checkThrows(
     Function function,
@@ -64,6 +69,7 @@ void checkThrows(
     }
 }
 
+/// Проверяет параметры атмосферы на уровне моря.
 void testSeaLevel() {
     const passive_flight::StandardAtmosphere atmosphere;
     const auto state = atmosphere.evaluate(0.0);
@@ -118,6 +124,7 @@ void testSeaLevel() {
     );
 }
 
+/// Проверяет использование параметров уровня земли при отрицательной высоте.
 void testNegativeAltitudeIsClampedToGround() {
     const passive_flight::StandardAtmosphere atmosphere;
 
@@ -149,6 +156,7 @@ void testNegativeAltitudeIsClampedToGround() {
     );
 }
 
+/// Проверяет физически ожидаемое изменение атмосферы с высотой.
 void testAtmosphereChangesWithAltitude() {
     const passive_flight::StandardAtmosphere atmosphere;
 
@@ -232,6 +240,7 @@ void testAtmosphereChangesWithAltitude() {
     );
 }
 
+/// Проверяет преобразование геометрической высоты в геопотенциальную.
 void testGeopotentialAltitude() {
     const passive_flight::StandardAtmosphere atmosphere;
     const auto state = atmosphere.evaluate(10000.0);
@@ -255,6 +264,7 @@ void testGeopotentialAltitude() {
     );
 }
 
+/// Проверяет непрерывность параметров на границе тропосферы.
 void testTropopauseContinuity() {
     const passive_flight::StandardAtmosphere atmosphere;
 
@@ -286,6 +296,7 @@ void testTropopauseContinuity() {
     );
 }
 
+/// Проверяет допустимый диапазон геометрических высот модели.
 void testRangeValidation() {
     const passive_flight::StandardAtmosphere atmosphere;
 
@@ -323,6 +334,7 @@ void testRangeValidation() {
     );
 }
 
+/// Проверяет отклонение нефизичных наборов атмосферных констант.
 void testParameterValidation() {
     auto parameters =
         passive_flight::StandardAtmosphereParameters{};
@@ -375,6 +387,7 @@ void testParameterValidation() {
 
 } // namespace
 
+/// Запускает модульные проверки стандартной атмосферы.
 int main() {
     testSeaLevel();
     testNegativeAltitudeIsClampedToGround();

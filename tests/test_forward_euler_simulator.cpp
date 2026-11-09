@@ -8,8 +8,10 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -20,6 +22,7 @@ void check(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void checkNear(
     double actual,
     double expected,
@@ -57,6 +60,11 @@ struct TestContext {
     }
 };
 
+/// Формирует запрос горизонтального сброса для контрольного объекта.
+/// @param context Согласованный паспорт и решатель.
+/// @param altitudeM Геометрическая высота сброса, м.
+/// @param speedMps Модуль скорости сброса, м/с.
+/// @return Запрос SimulationRequest в единицах СИ.
 passive_flight::SimulationRequest makeRequest(
     const TestContext& context,
     double altitudeM,
@@ -80,6 +88,7 @@ passive_flight::SimulationRequest makeRequest(
     return request;
 }
 
+/// Проверяет достижение поверхности и физические свойства конечного состояния.
 void testGroundIsReached() {
     const TestContext context;
 
@@ -177,6 +186,7 @@ void testGroundIsReached() {
     }
 }
 
+/// Проверяет согласованность полного и краткого результатов падения.
 void testSummary() {
     const TestContext context;
 
@@ -235,6 +245,7 @@ void testSummary() {
     );
 }
 
+/// Проверяет отключение сохранения дискретной истории.
 void testHistoryCanBeDisabled() {
     const TestContext context;
 
@@ -267,6 +278,7 @@ void testHistoryCanBeDisabled() {
     );
 }
 
+/// Проверяет детерминированность повторных расчётов с одинаковыми входами.
 void testDeterministicResult() {
     const TestContext context;
 
@@ -318,6 +330,7 @@ void testDeterministicResult() {
     );
 }
 
+/// Проверяет остановку по предельному времени моделирования.
 void testMaximumTimeTermination() {
     const TestContext context;
 
@@ -357,6 +370,7 @@ void testMaximumTimeTermination() {
     );
 }
 
+/// Проверяет остановку по предельному числу шагов интегрирования.
 void testMaximumStepsTermination() {
     const TestContext context;
 
@@ -391,6 +405,7 @@ void testMaximumStepsTermination() {
     );
 }
 
+/// Проверяет обработку некорректных идентификаторов и условий сброса.
 void testInvalidInput() {
     const TestContext context;
 
@@ -456,6 +471,7 @@ void testInvalidInput() {
 
 } // namespace
 
+/// Запускает модульные проверки явного интегратора траектории.
 int main() {
     testGroundIsReached();
     testSummary();

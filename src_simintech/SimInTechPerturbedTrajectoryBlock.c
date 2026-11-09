@@ -14,7 +14,7 @@
  * Отдельный SimInTech-блок временной истории
  * линейного продольного возмущённого движения.
  *
- * Входы 0..8:
+ * Входы 0..8 во внутренних единицах СИ:
  *
  * H0, V0, objectIndex,
  * Delta V0, Delta Theta0, Delta omega_z0,
@@ -37,6 +37,10 @@
  * perturbed fall time;
  * finished;
  * resultCode.
+ *
+ * Время задаётся в с, координаты — в м, скорость — в м/с. Углы и угловая
+ * скорость преобразуются на границе блока из рад и рад/с в град и град/с.
+ * Признак завершения и код результата безразмерны.
  */
 
 enum {
@@ -83,6 +87,10 @@ enum {
     PF_PT_EXTERNAL_VARIABLE_COUNT = 34
 };
 
+/*
+ * Начальные входы: H0 и Delta H0 — м; V0 и Delta V0 — м/с;
+ * углы — рад; угловая скорость — рад/с; индекс объекта безразмерен.
+ */
 static double defaultReleaseAltitudeM = 100.0;
 static double defaultReleaseSpeedMps = 200.0;
 static double defaultObjectIndex = 0.0;
@@ -95,6 +103,7 @@ static double defaultDeltaPitchAngleRad =
 static double defaultDeltaDownrangeM = 0.0;
 static double defaultDeltaAltitudeM = 0.0;
 
+/* Нулевое значение физических выходов и начальный код результата. */
 static double defaultZero = 0.0;
 static double defaultResultCode =
     (double) PF_RESULT_INVALID_INPUT;
@@ -483,7 +492,11 @@ typedef struct PFPerturbedTrajectoryLocalState {
     /* Признак наличия траектории для сохранённого набора входов. */
     int initialized;
 
-    /* Девять последних входов: H0, V0, индекс и шесть компонент Delta x0. */
+    /*
+     * Девять последних входов: H0, м; V0, м/с; безразмерный индекс объекта;
+     * Delta V0, м/с; Delta Theta0, рад; Delta omega_z0, рад/с;
+     * Delta theta0, рад; Delta x0 и Delta H0, м.
+     */
     double lastValues[9];
 
     /* Динамический массив совместных точек траектории в единицах C API. */
@@ -495,11 +508,17 @@ typedef struct PFPerturbedTrajectoryLocalState {
     int32_t resultCode;
 } PFPerturbedTrajectoryLocalState;
 
+/* Служебное описание задачи, заполняемое исполнительной средой SimInTech. */
 static TTaskInfoStruct taskInfo;
 
+/* Стабильный 32-битный идентификатор схемы истории возмущённого движения. */
 static const unsigned int schemeHash32 =
     0x50465451U;
 
+/*
+ * Возвращает адрес внешней скалярной переменной по безразмерному индексу.
+ * Возвращает адрес double либо NULL при отсутствии массива extVarsAddress.
+ */
 static double* externalDouble(
     void** extVarsAddress,
     int index
@@ -511,6 +530,7 @@ static double* externalDouble(
     return (double*) extVarsAddress[index];
 }
 
+/* Записывает значение в порт с заданным индексом при наличии его адреса. */
 static void writeExternalDouble(
     void** extVarsAddress,
     int index,
@@ -527,6 +547,10 @@ static void writeExternalDouble(
     }
 }
 
+/*
+ * Проверяет доступность всех внешних портов блока.
+ * Возвращает 1 при наличии каждого адреса либо 0 при обнаружении NULL.
+ */
 static int allExternalVariablesAreAvailable(
     void** extVarsAddress
 ) {
@@ -547,6 +571,10 @@ static int allExternalVariablesAreAvailable(
     return 1;
 }
 
+/*
+ * Освобождает динамическую совместную траекторию и обнуляет число точек.
+ * localState может быть NULL; повторный вызов безопасен.
+ */
 static void releaseTrajectory(
     PFPerturbedTrajectoryLocalState* localState
 ) {
@@ -562,6 +590,10 @@ static void releaseTrajectory(
     localState->pointCount = 0;
 }
 
+/*
+ * Преобразует вещественный индекс объекта в строковый идентификатор UTF-8.
+ * objectIdCapacity задана в байтах. Возвращает PFResultCode.
+ */
 static int objectIndexToId(
     double objectIndexValue,
     char* objectId,
@@ -603,6 +635,10 @@ static int objectIndexToId(
     );
 }
 
+/*
+ * Считывает девять входных портов в массив values во внутренних единицах СИ.
+ * Возвращает 1 при наличии всех адресов либо 0 при обнаружении NULL.
+ */
 static int readInputs(
     void** extVarsAddress,
     double values[9]
@@ -627,6 +663,10 @@ static int readInputs(
     return 1;
 }
 
+/*
+ * Сравнивает текущий массив входов с сохранённым набором.
+ * Возвращает 1 при первом вызове или изменении хотя бы одного значения.
+ */
 static int inputsHaveChanged(
     const PFPerturbedTrajectoryLocalState* localState,
     const double values[9]
@@ -648,6 +688,7 @@ static int inputsHaveChanged(
     return 0;
 }
 
+/* Сохраняет девять входных величин в локальном кэше блока. */
 static void rememberInputs(
     PFPerturbedTrajectoryLocalState* localState,
     const double values[9]
@@ -662,6 +703,10 @@ static void rememberInputs(
     localState->initialized = 1;
 }
 
+/*
+ * При изменении входов выполняет двухпроходный запрос совместной траектории,
+ * размещает точки C API в динамическом массиве и обновляет код результата.
+ */
 static void calculateTrajectoryIfNecessary(
     void** extVarsAddress,
     PFPerturbedTrajectoryLocalState* localState
@@ -824,6 +869,11 @@ static void calculateTrajectoryIfNecessary(
         PF_RESULT_OK;
 }
 
+/*
+ * Вычисляет `y = y0 + lambda*(y1-y0)`.
+ * first и second имеют одинаковые единицы, ratio безразмерен;
+ * результат выражен в единицах интерполируемой величины.
+ */
 static double interpolateValue(
     double first,
     double second,
@@ -840,6 +890,12 @@ static double interpolateValue(
         ratio \
     )
 
+/*
+ * Интерполирует совместную точку на момент requestedTimeS, с, используя
+ * двоичный поиск соседних узлов и линейную интерполяцию всех компонент.
+ * За пределами истории возвращает ближайшую крайнюю точку. Координаты
+ * результата заданы в м, скорости в м/с, углы в рад.
+ */
 static PFPerturbedTrajectoryPoint
 trajectoryPointAtTime(
     const PFPerturbedTrajectoryLocalState* localState,
@@ -952,6 +1008,7 @@ trajectoryPointAtTime(
 
 #undef PF_INTERPOLATE_FIELD
 
+/* Обнуляет физические выходы блока и записывает заданный PFResultCode. */
 static void clearOutputPorts(
     void** extVarsAddress,
     int32_t resultCode
@@ -975,6 +1032,11 @@ static void clearOutputPorts(
     );
 }
 
+/*
+ * Записывает одну совместную точку на выходные порты. Время передаётся в с,
+ * координаты в м, скорость в м/с; углы переводятся из рад в градусы,
+ * угловая скорость — из рад/с в град/с.
+ */
 static void writePoint(
     void** extVarsAddress,
     const PFPerturbedTrajectoryPoint* point,
@@ -1013,6 +1075,10 @@ static void writePoint(
     writeExternalDouble(extVarsAddress, PF_PT_OUTPUT_RESULT_CODE, (double) resultCode);
 }
 
+/*
+ * Выбирает точку совместной траектории для модельного времени modelTime, с,
+ * вычисляет безразмерный признак завершения и передаёт данные на порты.
+ */
 static void writeTrajectoryOutputs(
     void** extVarsAddress,
     const PFPerturbedTrajectoryLocalState* localState,

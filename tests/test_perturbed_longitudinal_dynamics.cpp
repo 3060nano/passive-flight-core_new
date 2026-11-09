@@ -10,14 +10,17 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Преобразует типизированный индекс компоненты в безразмерный индекс массива.
 constexpr std::size_t indexOf(
     passive_flight::LongitudinalStateIndex index
 ) noexcept {
     return static_cast<std::size_t>(index);
 }
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -28,6 +31,7 @@ void check(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void checkNear(
     double actual,
     double expected,
@@ -46,6 +50,7 @@ void checkNear(
     }
 }
 
+/// Требует возникновения исключения ExceptionType при вызове function.
 template <typename ExceptionType, typename Function>
 void checkThrows(
     Function function,
@@ -70,6 +75,7 @@ void checkThrows(
     }
 }
 
+/// Создаёт линеаризованную динамику контрольной ФАБ-1500Т.
 passive_flight::PerturbedLongitudinalDynamics
 makeDynamics() {
     const auto passport =
@@ -80,6 +86,8 @@ makeDynamics() {
     );
 }
 
+/// Формирует номинальное состояние для проверки матрицы Якоби.
+/// @return Состояние в порядке `t, V, Theta, omega_z, theta, x, H` и СИ.
 passive_flight::State makeNominalState() {
     return {
         20.0,
@@ -92,6 +100,7 @@ passive_flight::State makeNominalState() {
     };
 }
 
+/// Проверяет нулевую производную при нулевом векторе возмущений.
 void testZeroPerturbationHasZeroDerivative() {
     const auto dynamics = makeDynamics();
 
@@ -144,6 +153,7 @@ void testZeroPerturbationHasZeroDerivative() {
     );
 }
 
+/// Проверяет аналитически известные кинематические элементы матрицы Якоби.
 void testKinematicMatrixTerms() {
     const auto dynamics = makeDynamics();
     const auto state = makeNominalState();
@@ -206,6 +216,7 @@ void testKinematicMatrixTerms() {
     );
 }
 
+/// Проверяет отсутствие зависимости правой части от горизонтальной координаты.
 void testDownrangeDoesNotAffectDynamics() {
     const auto dynamics = makeDynamics();
     const auto matrix = dynamics.linearize(
@@ -228,6 +239,7 @@ void testDownrangeDoesNotAffectDynamics() {
     }
 }
 
+/// Проверяет знак статической восстанавливающей реакции по углу атаки.
 void testStaticRestoringResponse() {
     const auto dynamics = makeDynamics();
 
@@ -252,6 +264,7 @@ void testStaticRestoringResponse() {
     );
 }
 
+/// Сверяет `A*Delta x` с конечной разностью нелинейной правой части.
 void testLinearPredictionMatchesNonlinearDifference() {
     const auto dynamics = makeDynamics();
     const auto nominalState = makeNominalState();
@@ -318,6 +331,7 @@ void testLinearPredictionMatchesNonlinearDifference() {
     );
 }
 
+/// Проверяет отклонение некорректных шагов и не конечных возмущений.
 void testInvalidOptionsAndPerturbationAreRejected() {
     const auto passport =
         passive_flight::makeFab1500TPostnikovPassport();
@@ -363,6 +377,7 @@ void testInvalidOptionsAndPerturbationAreRejected() {
 
 } // namespace
 
+/// Запускает проверки численной линеаризации продольной динамики.
 int main() {
     testZeroPerturbationHasZeroDerivative();
     testKinematicMatrixTerms();

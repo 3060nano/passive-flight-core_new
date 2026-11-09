@@ -9,8 +9,10 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -21,6 +23,7 @@ void check(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void checkNear(
     double actual,
     double expected,
@@ -39,6 +42,7 @@ void checkNear(
     }
 }
 
+/// Требует возникновения исключения ExceptionType при вызове function.
 template <typename ExceptionType, typename Function>
 void checkThrows(
     Function function,
@@ -65,6 +69,8 @@ void checkThrows(
     }
 }
 
+/// Создаёт модель номинальной динамики контрольной ФАБ-1500Т.
+/// @return Валидированная правая часть с параметрами в единицах СИ.
 passive_flight::NominalLongitudinalDynamics
 makeDynamics() {
     const auto passport =
@@ -75,6 +81,7 @@ makeDynamics() {
     );
 }
 
+/// Проверяет кинематику и гравитационные члены горизонтального сброса.
 void testHorizontalReleaseKinematics() {
     const auto dynamics = makeDynamics();
 
@@ -154,6 +161,7 @@ void testHorizontalReleaseKinematics() {
     );
 }
 
+/// Проверяет уравнения `dx/dt = V*cos(Theta)` и `dH/dt = V*sin(Theta)`.
 void testKinematicEquations() {
     const auto dynamics = makeDynamics();
 
@@ -202,6 +210,7 @@ void testKinematicEquations() {
     );
 }
 
+/// Проверяет определение `alpha = theta - Theta` и его производную.
 void testAngleOfAttackDefinition() {
     const auto dynamics = makeDynamics();
 
@@ -251,6 +260,7 @@ void testAngleOfAttackDefinition() {
     );
 }
 
+/// Проверяет размеризацию сил `X`, `Y` и продольного момента `Mz`.
 void testDimensionedLoads() {
     const auto dynamics = makeDynamics();
 
@@ -305,6 +315,7 @@ void testDimensionedLoads() {
     );
 }
 
+/// Проверяет использование плотности и скорости звука атмосферной модели.
 void testAtmosphereConnection() {
     const auto dynamics = makeDynamics();
 
@@ -352,6 +363,7 @@ void testAtmosphereConnection() {
     );
 }
 
+/// Проверяет уравнение вращения `domega_z/dt = Mz/I_z`.
 void testRotationalEquation() {
     const auto dynamics = makeDynamics();
 
@@ -386,6 +398,7 @@ void testRotationalEquation() {
     );
 }
 
+/// Проверяет автономность правой части относительно абсолютного времени.
 void testTimeDoesNotChangeInstantaneousDynamics() {
     const auto dynamics = makeDynamics();
 
@@ -432,6 +445,7 @@ void testTimeDoesNotChangeInstantaneousDynamics() {
     );
 }
 
+/// Проверяет отклонение нефизичных и не конечных состояний.
 void testInvalidState() {
     const auto dynamics = makeDynamics();
 
@@ -501,6 +515,7 @@ void testInvalidState() {
 
 } // namespace
 
+/// Запускает проверки уравнений номинального продольного движения.
 int main() {
     testHorizontalReleaseKinematics();
     testKinematicEquations();

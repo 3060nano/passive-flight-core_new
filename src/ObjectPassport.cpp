@@ -11,8 +11,15 @@
 
 namespace passive_flight {
     namespace {
+        /// Абсолютный допуск сравнения паспортных чисел с моделью;
+        /// применяется в единицах сравниваемого параметра.
         constexpr double kComparisonTolerance = 1.0e-12;
 
+        /// Добавляет нарушение, если физический параметр не конечен
+        /// или не является строго положительным.
+        /// @param issues Накопитель диагностических записей.
+        /// @param value Проверяемое значение в единицах параметра.
+        /// @param field Стабильный путь параметра в паспорте.
         void requirePositive(
             ValidationIssues &issues,
             double value,
@@ -26,6 +33,10 @@ namespace passive_flight {
             }
         }
 
+        /// Добавляет нарушение, если числовой параметр не конечен.
+        /// @param issues Накопитель диагностических записей.
+        /// @param value Проверяемое значение в единицах параметра.
+        /// @param field Стабильный путь параметра в паспорте.
         void requireFinite(
             ValidationIssues &issues,
             double value,
@@ -36,10 +47,22 @@ namespace passive_flight {
             }
         }
 
+        /// Сравнивает два паспортных числа с фиксированным абсолютным допуском.
+        /// @param first Первое значение в единицах параметра.
+        /// @param second Второе значение в тех же единицах.
+        /// @return `true`, если `abs(first-second) <= kComparisonTolerance`.
         bool valuesEqual(double first, double second) {
             return std::abs(first - second) <= kComparisonTolerance;
         }
 
+        /// Добавляет числовую запись о происхождении параметра.
+        /// @param passport Изменяемый паспорт объекта.
+        /// @param path Стабильный путь параметра.
+        /// @param value Числовое значение в единице, заданной параметром unit.
+        /// @param unit Обозначение единицы СИ либо `1` для безразмерного числа.
+        /// @param status Категория способа получения значения.
+        /// @param source Идентификатор источника или расчётного правила.
+        /// @param note Пояснение физического смысла параметра.
         void addNumber(
             ObjectPassport &passport,
             std::string path,
@@ -59,6 +82,13 @@ namespace passive_flight {
             });
         }
 
+        /// Добавляет текстовую запись о происхождении параметра.
+        /// @param passport Изменяемый паспорт объекта.
+        /// @param path Стабильный путь параметра.
+        /// @param value Текстовое значение.
+        /// @param status Категория способа получения значения.
+        /// @param source Идентификатор источника или архитектурного решения.
+        /// @param note Пояснение смысла записи.
         void addText(
             ObjectPassport &passport,
             std::string path,
@@ -77,6 +107,11 @@ namespace passive_flight {
             });
         }
 
+        /// Проверяет наличие числовой записи и её совпадение с моделью.
+        /// @param issues Накопитель нарушений паспорта.
+        /// @param passport Проверяемый паспорт.
+        /// @param path Путь искомой записи.
+        /// @param expectedValue Ожидаемое значение в единицах записи.
         void checkNumericRecord(
             ValidationIssues &issues,
             const ObjectPassport &passport,
@@ -108,6 +143,11 @@ namespace passive_flight {
             }
         }
 
+        /// Проверяет наличие текстовой записи и её совпадение с моделью.
+        /// @param issues Накопитель нарушений паспорта.
+        /// @param passport Проверяемый паспорт.
+        /// @param path Путь искомой записи.
+        /// @param expectedValue Ожидаемая текстовая величина.
         void checkTextRecord(
             ValidationIssues &issues,
             const ObjectPassport &passport,
@@ -140,6 +180,10 @@ namespace passive_flight {
             }
         }
 
+        /// Проверяет структуру одной таблицы зависимости от числа Маха.
+        /// @param issues Накопитель нарушений числовой модели.
+        /// @param table Таблица безразмерных чисел Маха и коэффициентов.
+        /// @param field Путь таблицы в ObjectModel.
         void validateMachTable(
             ValidationIssues &issues,
             const std::vector<MachCoefficientPoint> &table,
@@ -183,6 +227,9 @@ namespace passive_flight {
             }
         }
 
+        /// Проверяет идентификационные, массовые и геометрические поля объекта.
+        /// @param issues Накопитель обнаруженных нарушений.
+        /// @param object Модель с массой в кг, инерцией в кг·м² и геометрией в м.
         void validateObjectFields(
             ValidationIssues &issues,
             const ObjectModel &object
@@ -239,6 +286,10 @@ namespace passive_flight {
             }
         }
 
+        /// Проверяет обязательные аэродинамические таблицы и наличие общего
+        /// ненулевого интервала безразмерного числа Маха.
+        /// @param issues Накопитель обнаруженных нарушений.
+        /// @param data Набор табличных коэффициентов и производных.
         void validateTabulatedAerodynamics(
             ValidationIssues &issues,
             const TabulatedAerodynamicData &data
@@ -287,6 +338,9 @@ namespace passive_flight {
             }
         }
 
+        /// Заполняет паспорт ФАБ-1500Т записями происхождения параметров
+        /// из таблицы 1.1 Постникова—Чуйко и производных расчётных величин.
+        /// @param passport Паспорт с предварительно созданной числовой моделью.
         void appendFab1500TProvenance(ObjectPassport &passport) {
             const ObjectModel &object = passport.object;
             constexpr const char *source = "postnikov-chuyko-1979-table-1.1";
@@ -337,6 +391,10 @@ namespace passive_flight {
                       "Количество узлов mz^(omega_bar)(M)");
         }
 
+        /// Проверяет уникальность путей, наличие единиц и источников,
+        /// а также конечность числовых значений паспортных записей.
+        /// @param issues Накопитель нарушений паспорта.
+        /// @param passport Проверяемая последовательность записей.
         void validateParameterList(
             ValidationIssues &issues,
             const ObjectPassport &passport
@@ -369,6 +427,10 @@ namespace passive_flight {
             }
         }
 
+        /// Сверяет ключевые записи происхождения контрольной ФАБ-1500Т
+        /// с фактическими значениями числовой модели.
+        /// @param issues Накопитель расхождений паспорта и модели.
+        /// @param passport Контрольный паспорт по Постникову—Чуйко.
         void validateFab1500TProvenance(
             ValidationIssues &issues,
             const ObjectPassport &passport
@@ -492,7 +554,10 @@ namespace passive_flight {
         ValidationIssues issues = validate(passport.object);
         validateParameterList(issues, passport);
 
-        // Строгая проверка provenance только для оригинального объекта
+        /*
+         * Полная сверка с первичным источником выполняется только для
+         * контрольной модели; расчётные модификации имеют иной статус данных.
+         */
         if (passport.object.id == "FAB_1500T_POSTNIKOV_1979") {
             validateFab1500TProvenance(issues, passport);
         }

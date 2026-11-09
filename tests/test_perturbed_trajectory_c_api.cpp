@@ -7,6 +7,7 @@
 
 namespace {
 
+/// Требует выполнения логического условия теста траекторного C API.
 void require(
     bool condition,
     const char* message
@@ -23,6 +24,7 @@ void require(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void requireNear(
     double actual,
     double expected,
@@ -47,6 +49,8 @@ void requireNear(
     }
 }
 
+/// Формирует штатный вход возмущённого расчёта в единицах СИ.
+/// @return Условия H0 = 100 м, V0 = 200 м/с и заданный вектор Delta x0.
 PFPerturbedSimulationInput makeInput() {
     PFPerturbedSimulationInput input{};
 
@@ -137,6 +141,7 @@ calculateTrajectory(
     return points;
 }
 
+/// Проверяет двухпроходное получение совместной возмущённой траектории.
 void testTrajectory() {
     const auto input =
         makeInput();
@@ -289,6 +294,7 @@ void testTrajectory() {
     );
 }
 
+/// Проверяет совпадение номинального и полного состояний при Delta x0 = 0.
 void testZeroPerturbation() {
     auto input =
         makeInput();
@@ -341,6 +347,7 @@ void testZeroPerturbation() {
 
 } // namespace
 
+/// Запускает проверки C API истории возмущённого движения.
 int main() {
     testTrajectory();
     testZeroPerturbation();

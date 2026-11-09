@@ -6,6 +6,7 @@
 
 namespace {
 
+/// Требует выполнения логического условия теста возмущённого C API.
 void require(
     bool condition,
     const char* message
@@ -22,6 +23,7 @@ void require(
     }
 }
 
+/// Проверяет абсолютную погрешность величин в одинаковых единицах.
 void requireNear(
     double actual,
     double expected,
@@ -62,6 +64,7 @@ makeBaseInput() {
     return input;
 }
 
+/// Проверяет наличие непустой версии расширения возмущённого C API.
 void testVersion() {
     const char* version =
         pfGetPerturbedApiVersion();
@@ -73,6 +76,7 @@ void testVersion() {
     );
 }
 
+/// Проверяет совпадение терминального состояния при нулевом возмущении.
 void testZeroPerturbation() {
     const auto input =
         makeBaseInput();
@@ -161,6 +165,7 @@ void testZeroPerturbation() {
     );
 }
 
+/// Проверяет конечность и ненулевой эффект заданного начального возмущения.
 void testNonZeroPerturbation() {
     auto input =
         makeBaseInput();
@@ -243,6 +248,7 @@ void testNonZeroPerturbation() {
     );
 }
 
+/// Проверяет код ошибки для неизвестного идентификатора объекта.
 void testInvalidObject() {
     auto input =
         makeBaseInput();
@@ -267,6 +273,7 @@ void testInvalidObject() {
 
 } // namespace
 
+/// Запускает проверки терминального C API возмущённого движения.
 int main() {
     testVersion();
     testZeroPerturbation();

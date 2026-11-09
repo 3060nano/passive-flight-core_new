@@ -9,11 +9,14 @@
 
 namespace {
 
+/// Число обнаруженных нарушений тестовых условий, безразмерный счётчик.
 int failureCount = 0;
 
+/// Коэффициент перевода углов из градусов в радианы, рад/град.
 constexpr double kDegreesToRadians =
     std::numbers::pi_v<double> / 180.0;
 
+/// Регистрирует нарушение логического условия без немедленного завершения.
 void check(
     bool condition,
     const std::string& message
@@ -31,9 +34,14 @@ void check(
 /*
  * Один шаг той же нелинейной системы явным методом Эйлера.
  *
- * Этот локальный интегратор нужен только для верификации:
- * мы намеренно не добавляем в production API отдельный режим
- * запуска ForwardEulerSimulator из произвольного состояния.
+ * Локальный интегратор используется только как независимый инструмент
+ * верификации и не расширяет публичный интерфейс ForwardEulerSimulator
+ * режимом запуска из произвольного состояния.
+ *
+ * @param current Состояние в начале шага в единицах СИ.
+ * @param derivative Правая часть нелинейной системы.
+ * @param timeStepS Шаг интегрирования, с.
+ * @return Состояние после одного шага в единицах СИ.
  */
 passive_flight::State makeNonlinearEulerStep(
     const passive_flight::State& current,
@@ -77,6 +85,8 @@ passive_flight::State makeNonlinearEulerStep(
  *
  *     Delta u_NL =
  *         u_perturbed_NL - u_nominal.
+ *
+ * @return Покомпонентная разность состояний в единицах СИ.
  */
 passive_flight::LongitudinalPerturbationState
 makeStateDifference(
@@ -117,6 +127,8 @@ makeStateDifference(
  *
  *     e =
  *         Delta u_NL - Delta u_linear.
+ *
+ * @return Вектор ошибки линейного приближения в единицах СИ.
  */
 passive_flight::LongitudinalPerturbationState
 makeLinearizationError(
@@ -162,6 +174,9 @@ makeLinearizationError(
  *
  * Это не физический критерий качества объекта.
  * Это техническая мера ошибки для теста сходимости.
+ *
+ * @param value Ошибка компонент состояния в единицах СИ.
+ * @return Безразмерная евклидова норма после масштабирования компонент.
  */
 double normalizedErrorNorm(
     const passive_flight::LongitudinalPerturbationState& value
@@ -227,7 +242,7 @@ struct ValidationResult {
  *
  *        u_p(0) = u*(0) + Delta u(0)
  *
- *    отдельно интегрируется ПОЛНАЯ нелинейная система.
+ *    отдельно интегрируется исходная нелинейная система.
  *
  * 4. В одинаковые моменты времени сравниваются:
  *
@@ -236,6 +251,9 @@ struct ValidationResult {
  *    и
  *
  *        Delta u_linear(t).
+ *
+ * @param perturbationScale Безразмерный множитель базового возмущения.
+ * @return Конечная и максимальная безразмерные нормы ошибки.
  */
 ValidationResult runValidation(
     double perturbationScale
@@ -259,13 +277,12 @@ ValidationResult runValidation(
         200.0;
 
     /*
-     * Базовое возмущение совпадает с используемым
-     * сейчас в perturbed demo:
+     * В качестве базового принято возмущение:
      *
-     * Delta V0 = 1 m/s;
-     * Delta theta0 = 0.1 deg.
+     * Delta V0 = 1 м/с;
+     * Delta theta0 = 0,1°.
      *
-     * Далее всё возмущение умножается на scale.
+     * Далее все компоненты возмущения умножаются на `perturbationScale`.
      */
     passive_flight::LongitudinalPerturbationState
         initialPerturbation;
@@ -285,12 +302,9 @@ ValidationResult runValidation(
         0.001;
 
     /*
-     * Сравниваем траектории до падения.
-     *
-     * Это принципиально:
-     * здесь проверяется система в вариациях
-     * на одном и том же интервале времени,
-     * а не чувствительность события H = 0.
+     * Сравнение выполняется до момента падения на общем временном интервале,
+     * поскольку целью данного теста является проверка вариационного уравнения,
+     * а не чувствительности момента наступления события `H = 0`.
      */
     options.maximumTimeS =
         4.0;
@@ -486,6 +500,7 @@ ValidationResult runValidation(
  *
  *     E -> E / 4.
  */
+/// Проверяет квадратичный порядок ошибки первого линейного приближения.
 void testLinearizationHasSecondOrderError() {
     const auto scale1 =
         runValidation(1.0);
@@ -610,6 +625,7 @@ void testLinearizationHasSecondOrderError() {
 
 } // namespace
 
+/// Запускает валидацию порядка сходимости линеаризованной модели.
 int main() {
     testLinearizationHasSecondOrderError();
 

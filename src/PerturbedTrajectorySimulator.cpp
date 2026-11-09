@@ -7,6 +7,9 @@
 namespace passive_flight {
 namespace {
 
+/// Проверяет конечность всех компонент малого возмущения.
+/// @param perturbation Отклонения компонент состояния в единицах СИ.
+/// @return `true`, если каждая компонента конечна.
 bool isFinite(
     const LongitudinalPerturbationState& perturbation
 ) {
@@ -21,6 +24,9 @@ bool isFinite(
         std::isfinite(perturbation.altitudeM);
 }
 
+/// Проверяет конечность времени и компонент полного состояния.
+/// @param state Состояние в единицах СИ.
+/// @return `true`, если каждая компонента конечна.
 bool isFinite(
     const State& state
 ) {
@@ -34,6 +40,11 @@ bool isFinite(
         std::isfinite(state.altitudeM);
 }
 
+/// Вычисляет линейную оценку полного состояния
+/// `x(t) = x*(t) + Delta x(t)`.
+/// @param nominalState Номинальное состояние `x*(t)` в единицах СИ.
+/// @param perturbation Малое отклонение `Delta x(t)` в единицах СИ.
+/// @return Покомпонентная сумма; время принимается из nominalState.
 State combine(
     const State& nominalState,
     const LongitudinalPerturbationState& perturbation
@@ -61,6 +72,12 @@ State combine(
     return totalState;
 }
 
+/// Выполняет шаг явного метода Эйлера для линейной системы возмущений:
+/// `Delta x_(n+1) = Delta x_n + dt*Delta x_dot_n`.
+/// @param current Возмущение в начале шага в единицах СИ.
+/// @param derivative Производные возмущения в согласованных единицах СИ.
+/// @param timeStepS Длительность шага, с.
+/// @return Возмущение на конце шага в единицах СИ.
 LongitudinalPerturbationState makeEulerStep(
     const LongitudinalPerturbationState& current,
     const LongitudinalPerturbationDerivative& derivative,
@@ -96,6 +113,11 @@ LongitudinalPerturbationState makeEulerStep(
     return next;
 }
 
+/// Добавляет совместную точку номинальной и возмущённой траекторий.
+/// Если точка с тем же временем уже существует, она заменяется.
+/// @param result Изменяемый результат возмущённого моделирования.
+/// @param nominalState Номинальное состояние в единицах СИ.
+/// @param perturbation Малое отклонение в единицах СИ.
 void appendSample(
     PerturbedSimulationResult& result,
     const State& nominalState,

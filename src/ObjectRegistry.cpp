@@ -8,6 +8,9 @@
 
 namespace passive_flight {
     namespace {
+        /// Формирует единое диагностическое сообщение из нарушений паспорта.
+        /// @param issues Последовательность путей полей и диагностик.
+        /// @return Многострочная строка, используемая в std::invalid_argument.
         std::string makeValidationErrorMessage(
             const ValidationIssues &issues
         ) {

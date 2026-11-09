@@ -9,12 +9,22 @@
 namespace passive_flight {
 namespace {
 
+/// Требует конечного числового значения.
+/// @param value Проверяемая величина в единицах соответствующей таблицы.
+/// @param name Диагностическое имя величины.
+/// @throws std::invalid_argument Если value не является конечным.
 void requireFinite(double value, const char* name) {
     if (!std::isfinite(value)) {
         throw std::invalid_argument(std::string(name) + " must be finite");
     }
 }
 
+/// Проверяет корректность одной зависимости от числа Маха.
+/// @param table Узлы с безразмерными числами Маха и значениями коэффициента.
+/// @param name Диагностическое имя таблицы.
+/// @param allowEmpty Разрешение пустой таблицы, эквивалентной нулевой функции.
+/// @throws std::invalid_argument Если узлов недостаточно, значения не конечны
+/// или числа Маха отрицательны либо не возрастают строго.
 void validateTable(
     const std::vector<MachCoefficientPoint>& table,
     const char* name,
@@ -60,6 +70,9 @@ void validateTable(
     }
 }
 
+/// Строит естественный кубический сплайн по аэродинамической таблице.
+/// @param table Узлы зависимости коэффициента от безразмерного числа Маха.
+/// @param spline Сплайн, получающий абсциссы и значения таблицы.
 void buildSpline(
     const std::vector<MachCoefficientPoint>& table,
     CubicSpline& spline
@@ -81,6 +94,14 @@ void buildSpline(
     spline.build(mach, values);
 }
 
+/// Интерполирует аэродинамическую величину в пределах табличного диапазона.
+/// @param table Таблица, задающая допустимый интервал числа Маха.
+/// @param spline Построенный по этой таблице кубический сплайн.
+/// @param mach Требуемое безразмерное число Маха.
+/// @param name Диагностическое имя таблицы.
+/// @return Значение коэффициента или производной в единицах таблицы;
+/// для пустой необязательной таблицы возвращает нуль.
+/// @throws std::out_of_range Если mach находится вне диапазона таблицы.
 double interpolate(
     const std::vector<MachCoefficientPoint>& table,
     const CubicSpline& spline,

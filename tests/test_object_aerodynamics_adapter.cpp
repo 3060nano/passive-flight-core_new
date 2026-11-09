@@ -9,6 +9,7 @@
 
 namespace {
 
+/// Проверяет абсолютное отклонение величин в одинаковых единицах.
 void requireNear(
     double actual,
     double expected,
@@ -20,6 +21,7 @@ void requireNear(
     }
 }
 
+/// Сверяет результат адаптера ObjectModel с непосредственной табличной моделью.
 void testFab1500TAdapter() {
     const auto passport =
         passive_flight::makeFab1500TPostnikovPassport();
@@ -45,6 +47,7 @@ void testFab1500TAdapter() {
     requireNear(adaptedResult.mz, directResult.mz, 1.0e-14, "Adapter mz");
 }
 
+/// Проверяет отклонение модели с некорректной аэродинамической таблицей.
 void testInvalidTableIsRejected() {
     auto passport = passive_flight::makeFab1500TPostnikovPassport();
     passport.object.tabulatedAerodynamics.cx0.clear();
@@ -65,6 +68,7 @@ void testInvalidTableIsRejected() {
 
 } // namespace
 
+/// Запускает проверки адаптера аэродинамической модели объекта.
 int main() {
     try {
         testFab1500TAdapter();

@@ -10,6 +10,8 @@
 
 namespace {
 
+/// Требует выполнения логического условия теста.
+/// @throws std::runtime_error с сообщением message при ложном condition.
 void require(
     bool condition,
     const std::string& message
@@ -19,6 +21,10 @@ void require(
     }
 }
 
+/// Проверяет абсолютное отклонение чисел в единицах проверяемой величины.
+/// @param actual Фактическое значение.
+/// @param expected Ожидаемое значение в тех же единицах.
+/// @param tolerance Допустимая абсолютная погрешность.
 void requireNear(
     double actual,
     double expected,
@@ -36,6 +42,7 @@ void requireNear(
     }
 }
 
+/// Проверяет паспортные массу, инерцию, геометрию и опорные величины ФАБ-1500Т.
 void testPassportValues() {
     const auto object =
         passive_flight::makeFab1500TPostnikovModel();
@@ -108,6 +115,7 @@ void testPassportValues() {
     );
 }
 
+/// Проверяет воспроизведение аэродинамических коэффициентов в табличном узле.
 void testKnownAerodynamicNode() {
     const auto object =
         passive_flight::makeFab1500TPostnikovModel();
@@ -167,6 +175,7 @@ void testKnownAerodynamicNode() {
     );
 }
 
+/// Проверяет физическую корректность траектории горизонтального сброса.
 void testHorizontalReleaseTrajectory() {
     const auto object =
         passive_flight::makeFab1500TPostnikovModel();
@@ -248,6 +257,8 @@ void testHorizontalReleaseTrajectory() {
 
 } // namespace
 
+/// Запускает набор модульных проверок контрольной модели ФАБ-1500Т.
+/// @return Нуль при успехе, ненулевой код при исключении проверки.
 int main() {
     try {
         testPassportValues();
